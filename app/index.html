@@ -309,9 +309,12 @@ function card({r, why}, isTop){
 let voz = null;
 function pickVoice(){ try { const vs = speechSynthesis.getVoices(); voz = vs.find(v=>/pt-BR/i.test(v.lang)) || vs.find(v=>/^pt/i.test(v.lang)) || null; } catch(e){} }
 if ('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+const FalaNativa = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()
+  && window.Capacitor.Plugins && window.Capacitor.Plugins.TextToSpeech;
 function speak(t, force){
-  if (!('speechSynthesis' in window)) return;
   if (!force && !userTalked) return;
+  if (FalaNativa){ FalaNativa.stop().catch(()=>{}).then(() => FalaNativa.speak({ text: t, lang: 'pt-BR', rate: 0.95 })).catch(()=>{}); return; }
+  if (!('speechSynthesis' in window)) return;
   try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang='pt-BR'; if (voz) u.voice = voz; u.rate = 0.95; speechSynthesis.speak(u); } catch(e){}
 }
 
@@ -319,7 +322,24 @@ function speak(t, force){
 let userTalked = false;
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 const mic = $('#mic'), msg = $('#micmsg');
+// No app Android/iOS a voz vem do reconhecimento do próprio celular (plugin do Capacitor),
+// que funciona sem internet quando o pacote de português está instalado no aparelho.
+const VozNativa = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()
+  && window.Capacitor.Plugins && window.Capacitor.Plugins.SpeechRecognition;
+async function ouvirNativo(){
+  try {
+    const p = await VozNativa.requestPermissions();
+    if (p.speechRecognition !== 'granted'){ msg.textContent = 'Preciso da permissão do microfone. Você também pode escrever abaixo.'; return; }
+    mic.classList.add('on'); msg.textContent = 'Ouvindo… fale sua demanda.';
+    const r = await VozNativa.start({ language: 'pt-BR', maxResults: 1, partialResults: false, popup: true, prompt: 'Fale o que está acontecendo' });
+    mic.classList.remove('on');
+    const t = (r && r.matches && r.matches[0]) || '';
+    if (t){ $('#q').value = t; msg.textContent = 'Toque e fale, ou escreva abaixo.'; userTalked = true; run(t, true); }
+    else msg.textContent = 'Não consegui ouvir. Tente de novo ou escreva.';
+  } catch(e){ mic.classList.remove('on'); msg.textContent = 'Não consegui ouvir. Tente de novo ou escreva.'; }
+}
 mic.addEventListener('click', () => {
+  if (VozNativa){ ouvirNativo(); return; }
   if (!SR){ msg.textContent = 'Este navegador não reconhece voz. Abra no Google Chrome ou escreva abaixo.'; return; }
   let rec;
   try { rec = new SR(); } catch(e){ msg.textContent = 'O microfone não está disponível aqui. Use os exemplos ou escreva.'; return; }
