@@ -1,0 +1,487 @@
+<title>TecAmazônia Voz</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap">
+<style>
+/* Layout: uma coluna de celular, centrada; microfone grande no topo, respostas em fichas abaixo */
+:root{
+  --bg:#EEF3EF; --surface:#FFFFFF; --ink:#14231C; --muted:#4F625A; --line:#CFDBD3;
+  --leaf:#1F6B4A; --leaf-soft:#DCEEE3; --acai:#5A2766; --acai-soft:#EFE3F2; --warn:#8A5A00; --warn-soft:#FBEFD6;
+  --net-bg:#0E2A22; --net-ink:#EAF4EE; --net-muted:#A9C4B6; --net-line:#7FA894; --net-hot:#F2B43C; --net-prod:#E8F1EA; --net-unit:#8FB3C9;
+  --c-cultivar:#6CCB8F; --c-pratica:#C58BD6; --c-processo:#F08A5D; --c-curso:#6FB7E9; --c-maquina:#B9C2C9; --c-outro:#5FD1C1;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1813; --surface:#17231C; --ink:#E6EFE9; --muted:#A2B5AB; --line:#2A3A31;
+  --leaf:#6FCB9C; --leaf-soft:#1C3A2B; --acai:#D7A6E3; --acai-soft:#33203A; --warn:#F2C46B; --warn-soft:#3A2E14; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1813; --surface:#17231C; --ink:#E6EFE9; --muted:#A2B5AB; --line:#2A3A31;
+  --leaf:#6FCB9C; --leaf-soft:#1C3A2B; --acai:#D7A6E3; --acai-soft:#33203A; --warn:#F2C46B; --warn-soft:#3A2E14; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:20px 48px}
+.app{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--display);font-weight:800;font-size:30px;letter-spacing:-.01em;margin:0;color:var(--leaf)}
+h1 span{color:var(--acai)}
+.tag{font-size:13px;color:var(--muted)}
+.note{font-size:14px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+.ask{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:14px;align-items:center;text-align:center}
+.ask h2{font-family:var(--display);font-weight:600;font-size:22px;margin:0;text-wrap:balance}
+#mic{width:96px;height:96px;border-radius:50%;border:0;background:var(--leaf);color:var(--bg);cursor:pointer;display:grid;place-items:center;transition:transform .15s}
+#mic:hover{transform:scale(1.04)} #mic:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--acai);outline-offset:3px}
+#mic.on{background:var(--acai);animation:pulse 1.2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--acai) 50%,transparent)}100%{box-shadow:0 0 0 22px transparent}}
+@media (prefers-reduced-motion: reduce){#mic.on{animation:none}}
+#micmsg{font-size:14px;color:var(--muted);min-height:1.5em;margin:0}
+.row{display:flex;gap:8px;width:100%}
+#q{flex:1;min-width:0;font:inherit;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.btn{font:inherit;font-weight:700;padding:12px 16px;border-radius:12px;border:0;background:var(--ink);color:var(--bg);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--leaf);border:1.5px solid var(--leaf)}
+.place{display:flex;gap:8px;align-items:center;font-size:15px;color:var(--muted);flex-wrap:wrap;justify-content:center}
+select{font:inherit;padding:6px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.examples{display:flex;flex-direction:column;gap:8px}
+.examples p{margin:0;font-size:14px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:inherit;font-size:15px;padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;text-align:left}
+.chip:hover{border-color:var(--leaf)}
+.chip.pick{background:var(--leaf-soft);border-color:var(--leaf)}
+#out{display:flex;flex-direction:column;gap:14px}
+.heard{font-size:15px;color:var(--muted)} .heard b{color:var(--ink)}
+.understood{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:14px}
+.pill{padding:3px 10px;border-radius:999px;background:var(--leaf-soft);color:var(--leaf);font-weight:700}
+.pill.need{background:var(--acai-soft);color:var(--acai)}
+.pill.none{background:transparent;border:1px dashed var(--line);color:var(--muted);font-weight:400}
+.say{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.say h3{font-family:var(--display);font-weight:600;font-size:20px;margin:0;text-wrap:balance}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.card.top{border:2px solid var(--leaf)}
+.meta{display:flex;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.meta .cat{color:var(--acai);font-weight:700}
+.card h4{margin:0;font-size:18px;line-height:1.3;text-wrap:balance}
+.card p{margin:0}
+.why{font-size:14px;color:var(--leaf)}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.acts button,.acts a{font:inherit;font-size:14px;font-weight:700;padding:8px 12px;border-radius:10px;border:1.5px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;text-decoration:none}
+details{font-size:15px} summary{cursor:pointer;color:var(--leaf);font-weight:700}
+details p{margin-top:8px;color:var(--muted);overflow-wrap:anywhere}
+.warn{background:var(--warn-soft);color:var(--warn);border-radius:12px;padding:10px 14px;font-size:14px}
+.clar{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.clar h3{margin:0;font-family:var(--display);font-weight:600;font-size:20px}
+.netwrap{background:var(--net-bg);border-radius:20px;padding:14px 14px 10px;display:flex;flex-direction:column;gap:8px;color:var(--net-ink)}
+.nethead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.nethead h2{font-family:var(--display);font-weight:800;font-size:20px;margin:0;color:var(--net-ink);text-wrap:balance}
+.nethead span{font-size:13px;color:var(--net-muted)}
+#net{width:100%;height:auto;display:block;touch-action:manipulation}
+#net .lnk{stroke:var(--net-line);stroke-opacity:.55}
+#net .lnk.hot{stroke:var(--net-hot);stroke-opacity:.9}
+#net .nd{cursor:pointer}
+#net .nd:focus-visible circle,#net .nd:focus-visible rect{stroke:var(--net-hot);stroke-width:3}
+#net text{fill:var(--net-ink);font-family:var(--body);pointer-events:none}
+#net .lbl{font-size:12px;fill:var(--net-muted)}
+#net .lbl.big{font-size:13px;font-weight:700;fill:var(--net-ink)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12.5px;color:var(--net-muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.legend i.sq{border-radius:2px}
+.nethint{font-size:13px;color:var(--net-muted);margin:0}
+.card.flash{animation:flash 1.2s}
+@keyframes flash{0%{box-shadow:0 0 0 4px var(--leaf)}100%{box-shadow:0 0 0 0 transparent}}
+footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+</style>
+
+<div class="app">
+  <header>
+    <h1>Tec<span>Amazônia</span></h1>
+    <span class="tag">Protótipo · catálogo Embrapa 2022 · <span id="count"></span> soluções</span>
+  </header>
+
+  <section class="ask" aria-label="Fazer uma pergunta">
+    <h2>Conte o que está acontecendo na sua roça ou criação</h2>
+    <button id="mic" aria-label="Falar"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v5"/></svg></button>
+    <p id="micmsg">Toque e fale, ou escreva abaixo.</p>
+    <form class="row" id="f">
+      <input id="q" type="text" placeholder="Ex.: minha bananeira tá com a folha preta" autocomplete="off" aria-label="Escreva sua pergunta">
+      <button class="btn" type="submit">Buscar</button>
+    </form>
+    <label class="place" for="uf">Estou no estado
+      <select id="uf">
+        <option value="">não informado</option>
+        <option value="AC">Acre</option><option value="AP">Amapá</option><option value="AM">Amazonas</option>
+        <option value="MA">Maranhão</option><option value="MT">Mato Grosso</option><option value="PA">Pará</option>
+        <option value="RO">Rondônia</option><option value="RR">Roraima</option><option value="TO">Tocantins</option>
+      </select>
+    </label>
+  </section>
+
+  <section class="netwrap" aria-label="Mapa de rede das soluções">
+    <div class="nethead"><h2 id="nettitle">A rede de soluções da Amazônia</h2><span id="netsub"></span></div>
+    <svg id="net" viewBox="0 0 600 470" role="img" aria-label="Mapa de rede das soluções"></svg>
+    <div class="legend" id="legend"></div>
+    <p class="nethint" id="nethint">Toque num produto para ver as soluções dele.</p>
+  </section>
+
+  <section class="examples" aria-label="Exemplos">
+    <p>Experimente uma fala de exemplo:</p>
+    <div class="chips" id="ex"></div>
+  </section>
+
+  <section id="out" aria-live="polite"></section>
+
+  <p class="note" id="vozinfo">No app final, a voz é reconhecida dentro do próprio celular, sem internet. Neste protótipo o microfone usa o reconhecimento do navegador: funciona abrindo o arquivo no Google Chrome. Dentro do Claude, use os exemplos ou escreva.</p>
+
+  <footer>Conteúdo: Painel de soluções TecAmazônia, extrato 2022, com descrições resumidas. As recomendações saem só do catálogo, sem texto inventado. Fichas ainda não revisadas por pesquisadores.</footer>
+</div>
+
+<script>
+const DATA = __DATA__;
+const $ = s => document.querySelector(s);
+const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim();
+const unit = r => (r.u||'').replace(/ e$/,'');
+$('#count').textContent = DATA.length;
+DATA.forEach(r => { r._t = norm(r.t); r._d = norm(r.d + ' ' + r.c + ' ' + r.p.join(' ')); });
+
+// Produtos e sinônimos regionais -> produto do catálogo
+const PRODUTOS = [
+  ['Abacaxi',['abacaxi','ananas']],
+  ['Açaí',['acai','acaizeiro','acaizal','juçara','jucara']],
+  ['Amendoim forrageiro (Arachis pintoi)',['amendoim forrageiro','arachis','mandobi','belmonte']],
+  ['Arroz',['arroz']],
+  ['Banana',['banana','bananeira','bananal','pacova']],
+  ['Bovino',['boi','gado','bezerro','novilho','bovino','pasto','pastagem','capim','rebanho','nelore']],
+  ['Leite',['leite','vaca','vacas','leiteira','queijo','ordenha']],
+  ['Cacau',['cacau','cacaueiro','cupuacu','cupuacuzeiro']],
+  ['Café canéfora',['cafe','cafezal','cafeeiro','conilon','robusta','canefora']],
+  ['Café arábica',['arabica']],
+  ['Camarão',['camarao','matapi']],
+  ['Castanha do pará',['castanha','castanheira','castanhal']],
+  ['Copaíba',['copaiba']],
+  ['Dendê',['dende','dendezeiro','palma de oleo','palma']],
+  ['Feijão',['feijao','caupi','feijao de corda','feijao de praia']],
+  ['Laranja',['laranja','citros','limao','tangerina']],
+  ['Látex',['seringa','seringueira','seringal','borracha','latex']],
+  ['Madeira',['madeira','floresta','manejo florestal','teca','pau de balsa','arvore','arvores','madeireira']],
+  ['Lenha',['lenha','carvao']],
+  ['Mandioca',['mandioca','macaxeira','aipim','farinha','tapioca','tucupi','manipueira','roca']],
+  ['Maracujá',['maracuja']],
+  ['Matrinxã',['matrinxa']],
+  ['Melancia',['melancia']],
+  ['Milho',['milho','milharal']],
+  ['Peixes',['peixe','peixes','piscicultura','pirarucu','tanque','acude','viveiro de peixe','pescado','alevino']],
+  ['Tambaqui',['tambaqui']],
+  ['Pequi',['pequi']],
+  ['Pimenta do reino',['pimenta','pimenta do reino','pimenteira']],
+  ['Soja',['soja']],
+  ['Sorgo',['sorgo','milheto']]
+];
+// Necessidades: palavras da fala -> padrões nas fichas
+const NECESSIDADES = [
+  {k:'doenca', nome:'Doença ou praga', fala:['doenca','doente','praga','preta','pretas','preto','escura','escuras','queimada na folha','mancha','fungo','podre','podridao','broca','lagarta','inseto','sigatoka','antracnose','nematoide','murcha','amarelando','bicho','morrendo'], ficha:/sigatoka|antracnose|nematoi|doenc|fungicid|antibacter|praga/},
+  {k:'daninha', nome:'Mato e plantas invasoras', fala:['mato','daninha','daninhas','invasora','cipo','juquira','sujo','goiabeira','capim capeta'], ficha:/daninha|cipo|goiabeira|sporobolus|invasor/},
+  {k:'variedade', nome:'Variedade, semente ou muda', fala:['semente','sementes','muda','mudas','variedade','cultivar','plantar','produzir mais','produtiva','resistente','entressafra','clone','enxertia'], ficha:/cultivar|muda|semente|enxert|clon|brs /},
+  {k:'solo', nome:'Solo e adubação', fala:['adubo','adubar','adubacao','calcario','calagem','solo','terra fraca','terra cansada','fertilizante','esterco'], ficha:/aduba|calagem|solo|manipueira|nutrisolo|fertiliz/},
+  {k:'processar', nome:'Beneficiar e vender', fala:['vender','venda','farinha','beneficiar','processar','agroindustria','doce','queijo','chips','enlatar','secar','secagem','fruta seca','renda'], ficha:/alimento processado|farinha|chips|queijo|enlat|secag|barcaca|barrinha|estruturado|desengordur/},
+  {k:'curso', nome:'Curso e capacitação', fala:['curso','aprender','treinamento','capacitacao','ensinar'], ficha:/treinamento|capacita|curso/},
+  {k:'pasto', nome:'Pasto e forragem', fala:['pasto','pastagem','capim','forragem','degradado','degradada','reformar'], ficha:/pastag|capim|forrag|braquiar|xaraes|piata/},
+  {k:'maquina', nome:'Máquina ou equipamento', fala:['maquina','equipamento','secador','ferramenta','aparelho','terreiro'], ficha:/maquina|equipamento|terreiro|desperfilhador|solarizador|matapi/},
+  {k:'reproducao', nome:'Reprodução e manejo do rebanho', fala:['reproducao','inseminacao','iatf','prenhez','cria','descarte','peso','reprodutor','reprodutores','matriz'], ficha:/iatf|reprodut|vetscore|sagabov|descarte|controle leiteiro/},
+  {k:'fogo', nome:'Roça sem queimar', fala:['queimar','queimada','fogo','sem queima','coivara'], ficha:/sem queima|sem fogo/},
+  {k:'criar', nome:'Criação de peixe', fala:['criar','criacao','tanque','viveiro','gaiola','aeracao','agua'], ficha:/criacao|tanque|viveiro|gaiola|aerac|ph/}
+];
+const ESTADOS = [['AC',['acre','rio branco','cruzeiro do sul']],['AM',['amazonas','manaus','itacoatiara','parintins']],['AP',['amapa','macapa']],['PA',['belem','santarem','maraba','braganca','castanhal']],['RO',['rondonia','porto velho','ji parana','ariquemes']],['RR',['roraima','boa vista']],['MT',['mato grosso','sinop','cuiaba']],['TO',['tocantins','palmas']],['MA',['maranhao','sao luis']]];
+const STOP = new Set('a o as os de da do das dos e em no na nos nas um uma para pra pro com que eu meu minha meus minhas ta esta tem ter como faco fazer quero queria aqui la ai muito mais mas por se nao sim isso esse essa ja tambem ficando ficou sao estao'.split(' '));
+
+function has(q, term){ return (' '+q+' ').includes(' '+term+' '); }
+function interpret(text){
+  const q = norm(text), raw = (text||'').toLowerCase();
+  const prods = PRODUTOS.filter(([p,ws]) => ws.some(w => has(q,w))).map(([p])=>p);
+  // "farinha" com castanha deve ficar com castanha; "capim/pasto" sem gado conta como Bovino
+  const needs = NECESSIDADES.filter(n => n.fala.some(w => has(q,w))).map(n=>n.k);
+  let uf = '';
+  for (const [s,ws] of ESTADOS) if (ws.some(w=>has(q,w))) { uf = s; break; }
+  if (!uf && /(^|\s)pará([\s.,!?]|$)/.test(raw)) uf = 'PA';
+  const toks = q.split(' ').filter(t => t.length>2 && !STOP.has(t));
+  return {q, prods, needs, uf, toks};
+}
+function recommend(it, uf){
+  const scored = [];
+  let hiddenAcre = 0;
+  for (const r of DATA){
+    let s = 0, why = [];
+    const prodHit = it.prods.length ? r.p.some(p => it.prods.includes(p)) : false;
+    if (it.prods.length && !prodHit) continue;
+    if (prodHit) s += 10;
+    for (const k of it.needs){
+      const n = NECESSIDADES.find(n=>n.k===k);
+      if (n.ficha.test(r._t + ' ' + r._d)) { s += 8 + (n.ficha.test(r._t) ? 4 : 0); why.push(n.nome.toLowerCase()); }
+    }
+    for (const t of it.toks){ if (r._t.includes(t)) s += 2; else if (r._d.includes(t)) s += 0.6; }
+    if (!it.needs.length && /cultivar|sistema/.test(norm(r.c))) s += 1;
+    if (s <= (prodHit ? 10 : 2)) { if (!(prodHit && !it.needs.length)) continue; }
+    if (r.ac && uf && uf !== 'AC') { hiddenAcre++; continue; }
+    scored.push({r, s, why});
+  }
+  scored.sort((a,b)=>b.s-a.s);
+  return {list: scored, hiddenAcre};
+}
+
+const EXEMPLOS = ['minha bananeira tá com as folhas ficando pretas','quero plantar açaí que dê na entressafra','como faço farinha de macaxeira para vender mais','meu pasto tá cheio de cipó aqui no Acre','quero criar tambaqui em tanque','quero fazer roça sem queimar','meu café conilon precisa de muda melhor'];
+$('#ex').innerHTML = EXEMPLOS.map(e=>`<button class="chip" type="button">${e}</button>`).join('');
+$('#ex').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) run(b.textContent, true); });
+$('#f').addEventListener('submit', e => { e.preventDefault(); run($('#q').value, false); });
+$('#uf').addEventListener('change', () => { if (last) run(last.text, false, last.extra); });
+
+let last = null;
+const esc = s => (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function firstSentence(d){ const m = (d||'').match(/^.{40,220}?[.;](\s|$)/); return m ? m[0].trim() : (d||'').slice(0,180).trim()+'…'; }
+
+function run(text, fromExample, extra){
+  text = (text||'').trim(); if (!text) return;
+  $('#q').value = text;
+  const it = interpret(text + (extra ? ' ' + extra : ''));
+  if (it.uf && $('#uf').value !== it.uf) $('#uf').value = it.uf;
+  const uf = $('#uf').value;
+  last = {text, extra};
+  const out = $('#out');
+  const pills = [
+    ...it.prods.map(p=>`<span class="pill">${esc(p.replace(/ \(.*/,''))}</span>`),
+    ...it.needs.map(k=>`<span class="pill need">${esc(NECESSIDADES.find(n=>n.k===k).nome)}</span>`),
+    uf ? `<span class="pill none">${esc($('#uf').selectedOptions[0].textContent)}</span>` : ''
+  ].join('');
+  let html = `<div class="heard">Você disse: <b>“${esc(text)}”</b></div>
+    <div class="understood">Entendi: ${pills || '<span class="pill none">nenhuma cultura ou necessidade</span>'}</div>`;
+  if (!it.prods.length && !it.needs.length){
+    html += clarProd('Não entendi qual é a cultura ou criação. Qual destas?');
+    out.innerHTML = html; drawOverview(); speak('Não entendi qual é a cultura ou criação. Escolha uma na tela.'); return;
+  }
+  const {list, hiddenAcre} = recommend(it, uf);
+  if (!list.length){
+    html += it.prods.length ? `<div class="warn">Ainda não temos solução no catálogo para isso em ${esc(it.prods.join(', '))}. No app final, esta pergunta seria guardada para a equipe da Embrapa priorizar.</div>` : clarProd('Para qual cultura ou criação?');
+    out.innerHTML = html; speak('Ainda não encontrei uma solução no catálogo para isso.'); return;
+  }
+  const top = list.slice(0,3), rest = list.slice(3);
+  const alvo = it.prods.length ? it.prods.map(p=>p.replace(/ \(.*/,'').toLowerCase()).join(' e ') : 'o que você descreveu';
+  html += `<div class="say"><h3>${top.length===1?'Encontrei 1 solução':'Encontrei '+list.length+' soluções; estas são as 3 melhores'} para ${esc(alvo)}</h3>
+    <button class="btn ghost" type="button" id="ouvir">Ouvir resposta</button></div>`;
+  if (it.prods.length && !it.needs.length){
+    html += `<div class="clar"><h3>O que você precisa para ${esc(alvo)}?</h3><div class="chips">${NECESSIDADES.filter(n=>DATA.some(r=>r.p.some(p=>it.prods.includes(p)) && n.ficha.test(r._t+' '+r._d))).map(n=>`<button class="chip" type="button" data-need="${n.k}">${esc(n.nome)}</button>`).join('')}</div></div>`;
+  }
+  html += top.map((x,i)=>card(x, i===0)).join('');
+  if (rest.length) html += `<details><summary>Ver mais ${rest.length} soluções</summary><div style="display:flex;flex-direction:column;gap:12px;margin-top:12px">${rest.map(x=>card(x,false)).join('')}</div></details>`;
+  if (hiddenAcre) html += `<div class="warn">${hiddenAcre} solução${hiddenAcre>1?'ões':''} foi${hiddenAcre>1?'ram':''} escondida${hiddenAcre>1?'s':''} porque vale${hiddenAcre>1?'m':''} só para o Acre.</div>`;
+  out.innerHTML = html;
+  drawFocus(list, it, alvo);
+  const fala = `Encontrei ${list.length} ${list.length>1?'soluções':'solução'} para ${alvo}. ` + top.map((x,i)=>`${i+1}: ${x.r.t}. ${firstSentence(x.r.d)} ${unit(x.r)?'Procure a '+unit(x.r)+'.':''}`).join(' ');
+  $('#ouvir').onclick = () => speak(fala, true);
+  if (fromExample) document.querySelector('.netwrap').scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'start'});
+}
+function clarProd(t){
+  const pop = ['Mandioca','Açaí','Banana','Bovino','Leite','Peixes','Café canéfora','Castanha do pará','Cacau','Milho','Feijão','Madeira'];
+  return `<div class="clar"><h3>${esc(t)}</h3><div class="chips">${pop.map(p=>`<button class="chip" type="button" data-prod="${esc(p)}">${esc(p)}</button>`).join('')}</div></div>`;
+}
+$('#out').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b || !last) return;
+  if (b.dataset.prod){ const syn = PRODUTOS.find(([p])=>p===b.dataset.prod)[1][0]; run(last.text, false, ((last.extra||'')+' '+syn).trim()); }
+  else if (b.dataset.need){ const n = NECESSIDADES.find(n=>n.k===b.dataset.need); run(last.text, false, ((last.extra||'')+' '+n.fala[0]).trim()); }
+  else if (b.dataset.say){ const r = DATA.find(r=>r.id==b.dataset.say); speak(`${r.t}. ${r.d} ${unit(r)?'Onde encontrar: '+unit(r)+'.':''}`, true); }
+});
+function card({r, why}, isTop){
+  const onde = r.w ? esc(r.w.replace(/;\s*/g,'; ')) : 'Não informado no painel.';
+  return `<article class="card${isTop?' top':''}" data-card="${r.id}">
+    <div class="meta"><span class="cat">${esc(r.c||'Solução')}</span><span>${esc(r.p.join(', ').replace(/ \(Arachis pintoi\)/,''))}</span>${unit(r)?`<span>${esc(unit(r))}</span>`:''}</div>
+    <h4>${esc(r.t)}</h4>
+    <p>${esc(firstSentence(r.d))}</p>
+    ${why.length?`<div class="why">Combina com: ${esc([...new Set(why)].join(', '))}</div>`:''}
+    ${r.ac?`<div class="warn">Validada só para o Estado do Acre.</div>`:''}
+    <details><summary>Ficha completa e onde encontrar</summary><p>${esc(r.d)}</p>${r.o?`<p><b>Observação:</b> ${esc(r.o)}</p>`:''}<p><b>Onde encontrar:</b> ${onde}</p></details>
+    <div class="acts"><button type="button" data-say="${r.id}">Ouvir</button>${r.l?`<a href="${esc(r.l)}" target="_blank" rel="noopener">Abrir publicação (PDF)</a>`:''}</div>
+  </article>`;
+}
+
+// Leitura em voz alta (pt-BR)
+let voz = null;
+function pickVoice(){ try { const vs = speechSynthesis.getVoices(); voz = vs.find(v=>/pt-BR/i.test(v.lang)) || vs.find(v=>/^pt/i.test(v.lang)) || null; } catch(e){} }
+if ('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function speak(t, force){
+  if (!('speechSynthesis' in window)) return;
+  if (!force && !userTalked) return;
+  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang='pt-BR'; if (voz) u.voice = voz; u.rate = 0.95; speechSynthesis.speak(u); } catch(e){}
+}
+
+// Microfone (reconhecimento do navegador no protótipo)
+let userTalked = false;
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const mic = $('#mic'), msg = $('#micmsg');
+mic.addEventListener('click', () => {
+  if (!SR){ msg.textContent = 'Este navegador não reconhece voz. Abra no Google Chrome ou escreva abaixo.'; return; }
+  let rec;
+  try { rec = new SR(); } catch(e){ msg.textContent = 'O microfone não está disponível aqui. Use os exemplos ou escreva.'; return; }
+  rec.lang = 'pt-BR'; rec.interimResults = true; rec.maxAlternatives = 1;
+  let final = '';
+  rec.onstart = () => { mic.classList.add('on'); msg.textContent = 'Ouvindo… fale sua demanda.'; };
+  rec.onresult = e => { let t=''; for (const r of e.results) t += r[0].transcript; $('#q').value = t; if (e.results[e.results.length-1].isFinal) final = t; };
+  rec.onerror = e => { mic.classList.remove('on'); msg.textContent = (e.error==='not-allowed'||e.error==='service-not-allowed') ? 'O microfone foi bloqueado aqui. Abra o arquivo no Chrome ou use os exemplos.' : (e.error==='network' ? 'O reconhecimento do navegador precisa de internet. No app final ele roda no celular.' : 'Não consegui ouvir. Tente de novo ou escreva.'); };
+  rec.onend = () => { mic.classList.remove('on'); const t = final || $('#q').value; if (t){ msg.textContent = 'Toque e fale, ou escreva abaixo.'; userTalked = true; run(t, true); } };
+  try { rec.start(); } catch(e){ msg.textContent = 'O microfone não está disponível aqui. Use os exemplos ou escreva.'; }
+});
+
+// ---------- Mapa de rede ----------
+const ICON = {'Abacaxi':'🍍','Açaí':'🫐','Amendoim forrageiro (Arachis pintoi)':'🌱','Arroz':'🌾','Banana':'🍌','Bovino':'🐂','Leite':'🥛','Cacau':'🍫','Café':'☕','Café canéfora':'☕','Café arábica':'☕','Camarão':'🦐','Castanha do pará':'🌰','Copaíba':'🌳','Dendê':'🌴','Feijão':'🫘','Goiaba':'🍐','Laranja':'🍊','Látex':'🌳','Leite':'🥛','Lenha':'🔥','Madeira':'🪵','Mandioca':'🥔','Maracujá':'🍈','Matrinxã':'🐟','Melancia':'🍉','Milho':'🌽','Peixes':'🐟','Tambaqui':'🐠','Pequi':'🍈','Pimenta do reino':'🌶️','Soja':'🫘','Sorgo':'🌾'};
+const CATS = [
+  ['cultivar','Variedade (cultivar)',/cultivar/],
+  ['pratica','Prática no campo',/pratica|sistema/],
+  ['processo','Beneficiamento',/alimento|processad/],
+  ['curso','Curso',/treinamento|capacita/],
+  ['maquina','Máquina e equipamento',/maquina|equipamento|fertiliz/],
+  ['outro','Método e aplicativo',/./]
+];
+const catOf = r => { const c = norm(r.c); return (CATS.find(([k,n,re]) => re.test(c))||CATS[5])[0]; };
+const shortP = p => p.replace(/ \(.*/,'').replace('Castanha do pará','Castanha').replace('Pimenta do reino','Pimenta').replace('Café canéfora','Café conilon');
+const shortU = u => u.replace(/^Embrapa /,'').replace(/ e$/,'') || 'Parceiro';
+const cut = (s,n) => s.length>n ? s.slice(0,n-1).trim()+'…' : s;
+const svg = document.getElementById('net');
+const NS = 'http://www.w3.org/2000/svg';
+let W = 600, H = 460;
+function sizeNet(){ const w = Math.round(svg.getBoundingClientRect().width) || 600; W = Math.max(340, Math.min(680, w)); H = W < 520 ? 560 : 470; svg.setAttribute('viewBox', `0 0 ${W} ${H}`); }
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function el(tag, attrs, parent){ const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+function legend(kinds){
+  const items = [];
+  if (kinds.has('busca')) items.push('<span><i style="background:var(--net-hot)"></i>Sua pergunta</span>');
+  if (kinds.has('prod') || kinds.has('unit')) items.push('<span><i style="background:var(--net-prod)"></i>Produto</span>');
+  CATS.forEach(([k,n]) => { if (kinds.has(k)) items.push(`<span><i style="background:var(--c-${k})"></i>${n}</span>`); });
+  if (kinds.has('unit')) items.push('<span><i class="sq" style="background:var(--net-unit)"></i>Onde encontrar</span>');
+  document.getElementById('legend').innerHTML = items.join('');
+}
+function layout(nodes, links, opts){
+  // força simples, sem biblioteca, para funcionar offline
+  let seed = 7; const rnd = () => (seed = (seed*16807) % 2147483647) / 2147483647;
+  const byId = Object.fromEntries(nodes.map(n=>[n.id,n]));
+  links.forEach(l => { l.source = byId[l.source]||l.source; l.target = byId[l.target]||l.target; });
+  nodes.forEach(n => { if (n.fx!==undefined){ n.x=n.fx; n.y=n.fy; } else { const a = rnd()*6.283, d = 60+rnd()*160; n.x = W/2+Math.cos(a)*d; n.y = H/2+Math.sin(a)*d*0.8; } n.vx=0; n.vy=0; });
+  const deg = {}; links.forEach(l => { deg[l.source.id]=(deg[l.source.id]||0)+1; deg[l.target.id]=(deg[l.target.id]||0)+1; });
+  for (let it=0; it<400; it++){
+    const alpha = 1 - it/400;
+    for (let i=0;i<nodes.length;i++) for (let j=i+1;j<nodes.length;j++){
+      const a=nodes[i], b=nodes[j]; let dx=b.x-a.x, dy=b.y-a.y; let d2=dx*dx+dy*dy||0.01; const d=Math.sqrt(d2);
+      const f = (Math.abs(a.charge||160)+Math.abs(b.charge||160))/2 * (0.2+alpha) * 0.35 / Math.max(d,12);
+      dx/=d; dy/=d; a.vx-=dx*f; a.vy-=dy*f; b.vx+=dx*f; b.vy+=dy*f;
+      const min = a.r+b.r+Math.max(a.pad||6,b.pad||6);
+      if (d<min){ const push=(min-d)/2; a.x-=dx*push; a.y-=dy*push; b.x+=dx*push; b.y+=dy*push; }
+    }
+    links.forEach(l => { const a=l.source,b=l.target; let dx=b.x-a.x, dy=b.y-a.y; const d=Math.sqrt(dx*dx+dy*dy)||0.01; const k=(d-(l.len||70))/d*(l.str||0.5)*alpha*0.5;
+      const ba = (deg[b.id]||1)/((deg[a.id]||1)+(deg[b.id]||1)); a.vx+=dx*k*ba; a.vy+=dy*k*ba; b.vx-=dx*k*(1-ba); b.vy-=dy*k*(1-ba); });
+    nodes.forEach(n => { n.vx += (W/2-n.x)*(opts.gx||0.05)*0.12; n.vy += (H/2-n.y)*(opts.gy||0.07)*0.12;
+      if (n.fx!==undefined){ n.x=n.fx; n.y=n.fy; n.vx=n.vy=0; return; }
+      n.vx*=0.6; n.vy*=0.6; n.x+=n.vx; n.y+=n.vy;
+      n.x = Math.max(n.r+(W<520?34:44), Math.min(W-n.r-(W<520?34:44), n.x)); n.y = Math.max(n.r+6, Math.min(H-n.r-20, n.y)); });
+  }
+}
+function wrap(text, n){
+  const words = text.split(' '), out = ['']; 
+  for (const w of words){ const cur = out[out.length-1]; if ((cur+' '+w).trim().length <= n) out[out.length-1] = (cur+' '+w).trim(); else if (out.length < 2) out.push(w); else { out[1] = cut(out[1]+' '+w, n); break; } }
+  return out;
+}
+function render(nodes, links){
+  svg.innerHTML = '';
+  const gl = el('g', {}, svg), gn = el('g', {}, svg);
+  const byId = Object.fromEntries(nodes.map(n=>[n.id,n]));
+  links.forEach((l,i) => {
+    const s = typeof l.source==='object'?l.source:byId[l.source], t = typeof l.target==='object'?l.target:byId[l.target];
+    const ln = el('line', {class:'lnk'+(l.hot?' hot':''), x1:s.x, y1:s.y, x2:t.x, y2:t.y, 'stroke-width': l.w||1.2}, gl);
+    if (!reduce){ ln.style.opacity = 0; ln.style.transition = 'opacity .5s'; setTimeout(()=>{ ln.style.opacity = 1; }, 250 + i*10); }
+  });
+  nodes.forEach((n,i) => {
+    const g = el('g', {class:'nd', tabindex:'0', role:'button', 'aria-label': n.aria||n.label}, gn);
+    g.style.transition = reduce ? 'none' : 'transform .6s cubic-bezier(.2,.8,.2,1), opacity .4s';
+    g.style.transform = reduce ? `translate(${n.x}px,${n.y}px)` : `translate(${W/2}px,${H/2}px) scale(.2)`;
+    g.style.opacity = reduce ? 1 : 0;
+    if (n.kind==='unit') el('rect', {x:-n.r, y:-n.r, width:n.r*2, height:n.r*2, rx:4, fill:'var(--net-unit)', stroke:'var(--net-bg)', 'stroke-width':1.5}, g);
+    else el('circle', {r:n.r, fill:n.fill, 'fill-opacity': n.dim?0.35:1, stroke: n.ring||'var(--net-bg)', 'stroke-width': n.ring?3:1.5}, g);
+    if (n.icon){ const t = el('text', {'text-anchor':'middle', 'dominant-baseline':'central', 'font-size': Math.round(n.r*1.05)}, g); t.textContent = n.icon; }
+    if (n.badge){ const t = el('text', {'text-anchor':'middle', 'dominant-baseline':'central', 'font-size':13, 'font-weight':700, style:'fill:var(--net-bg)'}, g); t.textContent = n.badge; }
+    if (n.label){ const t = el('text', {class:'lbl'+(n.big?' big':''), 'text-anchor': n.anchor||'middle', x: n.lx||0, y: n.ly!==undefined ? n.ly : n.r + 14}, g);
+      const lines = n.wrap ? wrap(n.label, n.wrap) : [n.label];
+      lines.forEach((ln, k) => { const ts = el('tspan', {x: n.lx||0, dy: k ? 14 : 0}, t); ts.textContent = ln; }); }
+    const act = () => n.onTap && n.onTap();
+    g.addEventListener('click', act);
+    g.addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' '){ e.preventDefault(); act(); } });
+    setTimeout(()=>{ g.style.transform = `translate(${n.x}px,${n.y}px)`; g.style.opacity = 1; }, reduce?0:60 + i*18);
+  });
+}
+function drawOverview(){
+  sizeNet();
+  const prodCount = {}, pu = {};
+  DATA.forEach(r => r.p.forEach(p => { prodCount[p]=(prodCount[p]||0)+1; const u = shortU(unit(r)); const k = p+'|'+u; pu[k]=(pu[k]||0)+1; }));
+  const prods = Object.keys(prodCount).filter(p => prodCount[p] >= 2);
+  const ucount = {}; DATA.forEach(r => { const u = shortU(unit(r)); ucount[u]=(ucount[u]||0)+1; });
+  const units = Object.keys(ucount).filter(u => u!=='Parceiro' && ucount[u]>=2);
+  const max = Math.max(...Object.values(prodCount));
+  const nodes = [
+    ...prods.map(p => ({id:'p:'+p, kind:'prod', r: (W<520?11:13) + (W<520?11:13)*Math.sqrt(prodCount[p]/max), fill:'var(--net-prod)', icon: ICON[p]||'🌿', label: (W<520 && prodCount[p]<8) ? '' : shortP(p), pad: W<520 ? 10 : 6, big: prodCount[p]>=8, charge: W<520 ? -95 : -140, aria:`${shortP(p)}, ${prodCount[p]} soluções`, onTap: () => { const syn = (PRODUTOS.find(([x])=>x===p)||[0,[p]])[1][0]; run('quero saber sobre '+syn, true); }})),
+    ...units.map(u => ({id:'u:'+u, kind:'unit', r: W<520?5:7, label: W<520 ? '' : u, charge: W<520 ? -70 : -260, aria:'Embrapa '+u}))
+  ];
+  const ids = new Set(nodes.map(n=>n.id));
+  const links = Object.entries(pu).map(([k,v]) => { const [p,u] = k.split('|'); return {source:'p:'+p, target:'u:'+u, w: 0.6+Math.min(v,6)*0.5, len: 95, str: 0.15}; }).filter(l => ids.has(l.source) && ids.has(l.target));
+  layout(nodes, links, W<520 ? {gx:0.09, gy:0.07} : {gx:0.05, gy:0.09});
+  render(nodes, links);
+  legend(new Set(['unit']));
+  document.getElementById('nettitle').textContent = 'A rede de soluções da Amazônia';
+  document.getElementById('netsub').textContent = `${DATA.length} soluções · ${prods.length} produtos · ${units.length} unidades Embrapa`;
+  document.getElementById('nethint').textContent = 'Cada produto se liga às unidades da Embrapa que têm soluções para ele. Toque num produto para ver as soluções.';
+}
+function drawFocus(list, it, alvo){
+  // produto no centro, soluções em volta, outros produtos ligados por fora
+  sizeNet();
+  const narrow = W < 520, top = list.slice(0, narrow ? 6 : 8);
+  const cx = W/2, cy = H/2, rx = W/2 - (narrow ? 58 : 110), ry = H/2 - (narrow ? 70 : 88);
+  const nodes = [], links = [], kinds = new Set();
+  const mains = it.prods.length ? [...new Set(top.flatMap(x => x.r.p.filter(p => it.prods.includes(p))))] : [];
+  const hubs = {};
+  const hubIds = mains.length ? mains : ['__q'];
+  hubIds.forEach((p, i) => {
+    const off = (i - (hubIds.length-1)/2) * (narrow ? 58 : 72);
+    const nd = p === '__q'
+      ? {id:'q', kind:'busca', r:26, fill:'var(--net-hot)', icon:'🗣️', x:cx+off, y:cy, label:'Sua pergunta', big:true, aria:'Sua pergunta'}
+      : {id:'p:'+p, kind:'prod', r: narrow?24:28, fill:'var(--net-prod)', ring:'var(--net-hot)', icon: ICON[p]||'🌿', x:cx+off, y:cy, label: shortP(p), big:true, ly:(narrow?24:28)+16, aria: shortP(p),
+         onTap: () => { const syn=(PRODUTOS.find(([x])=>x===p)||[0,[p]])[1][0]; run('quero saber sobre '+syn, true); }};
+    nodes.push(nd); hubs[p] = nd;
+  });
+  if (mains.length) kinds.add('prod');
+  const n = top.length;
+  const outer = {};
+  top.forEach((x, i) => {
+    const r = x.r, k = catOf(r), big = i < 3; kinds.add(k);
+    const a = -Math.PI/2 + (Math.PI*2) * i / n + (n % 2 ? 0 : Math.PI/n/2);
+    const nd = {id:'s:'+r.id, kind:k, r: big ? 18 : 12, fill:`var(--c-${k})`, ring: big ? 'var(--net-hot)' : null, badge: big ? String(i+1) : '',
+      x: cx + Math.cos(a)*rx, y: cy + Math.sin(a)*ry, label: r.t.replace(/ - .*| : .*|:.*/,''), wrap: narrow ? 17 : 22, big,
+      ly: Math.sin(a) < -0.5 ? -(big?44:36) : (big?32:26), aria:`Solução ${i+1}: ${r.t}`, onTap: () => openCard(r.id)};
+    nodes.push(nd);
+    const own = r.p.filter(p => hubs[p]);
+    (own.length ? own : [hubIds[0]]).forEach(p => links.push({source: hubs[p] || hubs['__q'], target: nd, w: big ? 3 : 1.4, hot: big}));
+    r.p.filter(p => !hubs[p]).forEach(p => { (outer[p] = outer[p] || []).push({nd, a}); });
+  });
+  Object.entries(outer).forEach(([p, arr]) => {
+    const a = Math.atan2(arr.reduce((s,o)=>s+Math.sin(o.a),0), arr.reduce((s,o)=>s+Math.cos(o.a),0));
+        const nd = {id:'p:'+p, kind:'prod', r:15, fill:'var(--net-prod)', icon: ICON[p]||'🌿', label: shortP(p),
+      x: hubs[hubIds[0]].x + (arr[0].nd.x - hubs[hubIds[0]].x)*0.62, y: hubs[hubIds[0]].y + (arr[0].nd.y - hubs[hubIds[0]].y)*0.62 - (Math.sin(arr[0].a) > 0.5 ? -8 : 38), aria: shortP(p),
+      onTap: () => { const syn=(PRODUTOS.find(([x])=>x===p)||[0,[p]])[1][0]; run('quero saber sobre '+syn, true); }};
+    nodes.push(nd); kinds.add('prod');
+    arr.forEach(o => links.push({source:o.nd, target:nd, w:1.2}));
+  });
+  render(nodes, links);
+  legend(kinds);
+  document.getElementById('nettitle').textContent = 'Mapa da sua resposta';
+  document.getElementById('netsub').textContent = `${top.length} de ${list.length} soluções para ${alvo}`;
+  document.getElementById('nethint').textContent = 'Os números 1, 2 e 3 são as melhores soluções. Toque numa bolinha para abrir a ficha e ouvir. Toque num produto para ver as soluções dele.';
+}
+function openCard(id){
+  const c = document.querySelector(`[data-card="${id}"]`); if (!c) return;
+  const d = c.closest('details'); if (d) d.open = true;
+  c.scrollIntoView({behavior: reduce?'auto':'smooth', block:'center'});
+  c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash');
+  const r = DATA.find(r=>r.id==id); speak(`${r.t}. ${firstSentence(r.d)}`, true);
+}
+
+drawOverview();
+</script>

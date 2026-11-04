@@ -1,0 +1,19 @@
+tipo,camada,observacao
+Documentos,tecnico,Série editada pela Embrapa
+Circular Técnica,tecnico,Série editada pela Embrapa
+Comunicado Técnico,tecnico,Série editada pela Embrapa
+Folhetos,tecnico,Folders e folhetos
+Livro técnico,tecnico,
+Orientação Técnica,tecnico,
+Cartilhas,tecnico,
+Boletim de Pesquisa e Desenvolvimento,cientifico,Série da Embrapa com conteúdo científico (decisão a confirmar)
+Artigo em periódico indexado,cientifico,
+Artigo de divulgação na mídia,tecnico,Linguagem de divulgação (a confirmar)
+Artigo em anais de congresso,cientifico,
+Resumo em anais de congresso,cientifico,
+Capítulo em livro científico,cientifico,
+Capítulo em livro técnico,tecnico,
+Livro científico,cientifico,
+Parte de livro,cientifico,A confirmar
+Tese/dissertação,cientifico,
+Nota técnica/Nota científica,cientifico,
