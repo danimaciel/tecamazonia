@@ -35,6 +35,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from apoio import confianca, sugerir_apoio
+
 RAIZ = Path(__file__).resolve().parents[1]
 DADOS = RAIZ / "dados"
 SAIDA = RAIZ / "saida"
@@ -98,6 +100,14 @@ def prioridade(d: dict) -> tuple:
     return 3, PRIORIDADES[3]
 
 
+def apoio_contagem(sol: list) -> dict:
+    c = {"com apoio declarado": 0, "só com apoio sugerido": 0, "sem apoio": 0}
+    for d in sol:
+        origens = {a["origem"] for a in d["apoio"]}
+        c["com apoio declarado" if origens - {"sugerido"} else "só com apoio sugerido" if origens else "sem apoio"] += 1
+    return c
+
+
 def main(mes: str, so_bioma: bool) -> None:
     pasta = DADOS / "enriquecimento"
     e = pd.read_csv(pasta / "enriquecimento.csv.gz", dtype=str).fillna("").set_index("doc_uid")
@@ -117,13 +127,14 @@ def main(mes: str, so_bioma: bool) -> None:
         return BIOMA in m["b"] or (not so_bioma and bool(set(m["uf"]) & UFS_AMAZONIA_LEGAL))
 
     # Soluções tecnológicas
-    sol = []
+    sol, textos = [], {}
     for r in ler(mes, "solucoes-tecnologicas").to_dict("records"):
         m = marca("T:" + r["ID"])
         if BIOMA in limpo(r.get("Bioma")):
             m["b"] = sorted(set(m["b"]) | {BIOMA})
         if not na_amazonia(m):
             continue
+        textos["TEC " + r["ID"]] = " ".join(limpo(r.get(c)) for c in r if re.search(r"onde|descri|link|publica", c, re.I))
         sol.append({"c": "TEC " + r["ID"], "t": limpo(r["Nome"]), "d": curto(limpo(r["Descrição"]), RESUMO_MAX),
                     "a": limpo(r["Ano de lançamento"]),
                     "tipo": " - ".join(x for x in (limpo(r.get("Tipo")), limpo(r.get("Subtipo"))) if x),
@@ -163,16 +174,30 @@ def main(mes: str, so_bioma: bool) -> None:
             prj.append({"c": "PRJ " + r["ID"], "t": limpo(r["Título"]), "a": limpo(r["mês/ano de início"])[-4:],
                         "u": limpo(r["Unidade líder"]), "l": limpo(r["Página do projeto no Portal Embrapa"]), **m})
 
+    # Material de apoio de cada solução (declarado na ficha ou sugerido pelo recorte)
+    sugerir_apoio(sol, tec, textos)
+
     # Curadoria: reprovados saem de tudo; o produtor só recebe o que foi aprovado
     rev_arq = RAIZ / "curadoria" / "revisados.csv"
     rev = pd.read_csv(rev_arq, dtype=str).fillna("") if rev_arq.exists() else pd.DataFrame(columns=["codigo", "decisao"])
     decisao = dict(zip(rev.codigo, rev.decisao.str.lower()))
+    apoio_rev = dict(zip(rev.codigo, rev["apoio"])) if "apoio" in rev else {}
+    por_codigo = {d["c"]: d for d in tec}
     for lst in (sol, tec):
         for d in lst:
             d["rev"] = decisao.get(d["c"], "")
+    for d in sol:
+        # A coluna apoio de revisados.csv (códigos PUB ou links, separados por ;) substitui a sugestão;
+        # aprovado sem a coluna preenchida aceita o apoio sugerido que estava na fila
+        conf = [x.strip() for x in apoio_rev.get(d["c"], "").split(";") if x.strip()]
+        if conf:
+            d["apoio"] = [{"c": x, "t": por_codigo[x]["t"], "pdf": por_codigo[x].get("pdf", ""), "origem": "curadoria", "nota": 100}
+                          if x in por_codigo else {"c": "", "t": "", "pdf": x, "origem": "curadoria", "nota": 100} for x in conf]
     sol_app = [d for d in sol if d["rev"] != "reprovado"]
     tec_app = [d for d in tec if d["rev"] != "reprovado"]
-    sol_prod = [d for d in sol if d["rev"] == "aprovado"]
+    # Para o produtor, a solução vai junto com o material que ensina a usá-la
+    sol_prod = [d for d in sol if d["rev"] == "aprovado" and d["apoio"]]
+    sem_apoio = [d for d in sol if d["rev"] == "aprovado" and not d["apoio"]]
     tec_prod = [d for d in tec if d["rev"] == "aprovado"]
 
     def lista_produtos(docs: list) -> list:
@@ -201,11 +226,14 @@ def main(mes: str, so_bioma: bool) -> None:
 
     pend = [{"prioridade": prioridade(d)[0], "motivo": prioridade(d)[1],
              "codigo": d["c"], "tipo_doc": "solução" if d["c"].startswith("TEC") else "publicação técnica",
-             "titulo": d["t"], "ano": d["a"], "produtos": ";".join(d["p"]), "ufs": ";".join(d["uf"]), "link": d["l"],
+             "titulo": d["t"], "ano": d["a"],
+             "apoio": ";".join(a["c"] or a["pdf"] for a in d.get("apoio", [])),
+             "apoio_titulos": " | ".join(f"{a['t'] or a['pdf']} ({a['origem']}{', ' + confianca(a['nota']) if a['origem'] == 'sugerido' else ''})"
+                                         for a in d.get("apoio", [])), "produtos": ";".join(d["p"]), "ufs": ";".join(d["uf"]), "link": d["l"],
              "decisao": "", "revisor": "", "data": "", "observacao": ""}
             for d in sol + tec if not d["rev"]]
     pend.sort(key=lambda x: (x["prioridade"], -int(x["ano"]) if x["ano"].isdigit() else 0))
-    pd.DataFrame(pend, columns=["prioridade", "motivo", "codigo", "tipo_doc", "titulo", "ano", "produtos", "ufs", "link",
+    pd.DataFrame(pend, columns=["prioridade", "motivo", "codigo", "tipo_doc", "titulo", "ano", "apoio", "apoio_titulos", "produtos", "ufs", "link",
                                 "decisao", "revisor", "data", "observacao"]).to_csv(SAIDA / "pendentes.csv", index=False)
 
     revisar = rel[rel.origem != "tabela"]
@@ -217,7 +245,9 @@ def main(mes: str, so_bioma: bool) -> None:
            f"| Publicações científicas | {len(cie)} |",
            f"| Projetos | {len(prj)} |",
            f"| Liberados para o produtor (aprovados) | {len(sol_prod) + len(tec_prod)} |",
+           f"| Soluções aprovadas mas sem material de apoio (não vão ao produtor) | {len(sem_apoio)} |",
            f"| Aguardando curadoria (soluções e técnicas) | {len(pend)} |", "",
+           "Material de apoio das soluções: " + ", ".join(f"{n} {o}" for o, n in apoio_contagem(sol).items()) + ".", "",
            "Fila de curadoria por prioridade: " + ", ".join(
                f"{n} = {PRIORIDADES[n]} ({sum(x['prioridade'] == n for x in pend)})" for n in sorted(PRIORIDADES)) + ".", ""]
     if len(revisar):

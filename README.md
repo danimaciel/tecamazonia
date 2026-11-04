@@ -30,6 +30,9 @@ chegar ao app. Não é um serviço oficial da Embrapa.
   científico (artigos, anais, resumos, livros científicos, teses) fica no "Para saber mais" do extensionista.
   Tipo novo que não está na tabela aparece no resumo do fluxo para alguém classificar. O relatório também conta
   quantos de cada tipo têm PDF na Infoteca-e (técnico) ou no Alice (científico), como checagem.
+- **Material de apoio:** cada solução vai ao produtor junto com a publicação técnica que ensina a usá-la, como
+  no painel de 2022. O recorte acha o apoio citado na ficha da solução ou sugere pelo produto e pelo título
+  (`pipeline/apoio.py`); a curadoria confirma ou troca.
 - **Curadoria:** o produtor só vê o que a equipe aprovou; a fila mensal vem ordenada do mais amazônico
   (bioma Amazônia) para o menos. Ver `curadoria/LEIAME.md`.
 

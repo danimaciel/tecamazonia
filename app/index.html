@@ -113,6 +113,9 @@ body[data-modo="ext"] .netwrap{order:3} body[data-modo="ext"] .note{order:4} bod
 .k{font-weight:700;font-size:12.5px;padding:2px 8px;border-radius:999px}
 .k-s{background:var(--leaf-soft);color:var(--leaf)} .k-t{background:var(--info-soft);color:var(--info)}
 .k-c{background:var(--acai-soft);color:var(--acai)} .k-p{background:var(--warn-soft);color:var(--warn)}
+.apoio{display:flex;flex-direction:column;gap:4px;font-size:15px;border-left:3px solid var(--leaf);padding-left:10px}
+.apoio a{color:var(--leaf);font-weight:700;overflow-wrap:anywhere}
+.apoio .orig{font-size:13px;color:var(--muted)}
 .rev{font-weight:700;color:var(--warn)} .rev.ok{color:var(--leaf)}
 .boas{position:fixed;inset:0;background:color-mix(in srgb,var(--bg) 94%,transparent);display:grid;place-items:center;padding:16px;z-index:10}
 .boas[hidden]{display:none}
@@ -373,7 +376,7 @@ function card({r, why}, isTop){
     <p>${esc(firstSentence(r.d))}</p>
     ${why.length?`<div class="why">Combina com: ${esc([...new Set(why)].join(', '))}</div>`:''}
     ${r.ac?`<div class="warn">Validada só para o Estado do Acre.</div>`:''}
-    <details><summary>Ficha completa e onde encontrar</summary><p>${esc(r.d)}</p>${r.o?`<p><b>Observação:</b> ${esc(r.o)}</p>`:''}<p><b>Onde encontrar:</b> ${onde}</p></details>
+    <details><summary>Ficha completa e onde encontrar</summary><p>${esc(r.d)}</p>${r.o?`<p><b>Observação:</b> ${esc(r.o)}</p>`:''}<p><b>Onde encontrar:</b> ${onde}</p>${(r.ap||[]).length ? `<p><b>Material de apoio:</b> ${r.ap.map(a => a.pdf ? `<a href="${esc(a.pdf)}" target="_blank" rel="noopener">${esc(a.t || 'PDF')}</a>` : esc(a.t)).join('; ')}</p>` : ''}</details>
     <div class="acts"><button type="button" data-say="${r.id}">Ouvir</button>${r.l?`<a href="${esc(r.l)}" target="_blank" rel="noopener">Abrir publicação (PDF)</a>`:''}</div>
   </article>`;
 }
@@ -607,6 +610,7 @@ const ICON_ID = {abacaxi:'🍍',acai:'🫐',arroz:'🌾',banana:'🍌',bovinos:'
   eucalipto:'🌲',cana:'🎋',babacu:'🌴',palmito:'🌴',equinos:'🐎',goiaba:'🍐',caju:'🍎',acerola:'🍒',frutas:'🍇',algodao:'☁️',batata_doce:'🍠',
   abobora:'🎃',pimentao:'🌶️',frutas_nativas:'🍈',macauba:'🌴',moluscos:'🦪',urucum:'🔴'};
 const NOME_K = {s:'Solução tecnológica', t:'Publicação técnica', c:'Publicação científica', p:'Projeto'};
+const ORIGEM = {d:'citado na ficha', s:'sugerido, a confirmar', c:'confirmado pela curadoria'};
 const PLURAL_K = {s:'soluções', t:'técnicas', c:'científicas', p:'projetos'};
 // Palavras que só nomeiam o produto saem da busca por texto (o filtro de produto já cuida delas);
 // as que também dizem uma necessidade, como "farinha", continuam
@@ -631,7 +635,8 @@ async function carregarAcervo(){
   // O que a curadoria aprovou entra no catálogo do produtor
   const aprov = ACERVO.itens.filter(x => (x.k === 's' || x.k === 't') && x.rev === 'aprovado');
   aprov.forEach(x => {
-    const r = {id: x.c, t: x.t, d: x.r || '', l: x.pdf || linkDe(x), c: NOME_K[x.k], o: '', w: x.w || '', u: x.u || '',
+    if (x.k === 's' && !(x.ap && x.ap.length)) return;  // solução só chega ao produtor com material de apoio
+    const r = {id: x.c, t: x.t, d: x.r || '', l: x.k === 's' ? x.ap[0].pdf : (x.pdf || linkDe(x)), ap: x.ap || [], c: NOME_K[x.k], o: '', w: x.w || '', u: x.u || '',
                p: [...new Set(x.p.map(id => ID2022[id] || prodNome[id] || id))], ac: false};
     r._t = norm(r.t); r._d = norm(r.d + ' ' + r.c + ' ' + r.p.join(' '));
     DATA.push(r);
@@ -699,6 +704,7 @@ function cardExt(x){
     <h4>${esc(x.t)}</h4>
     ${x.r ? `<p>${esc(x.r)}</p>` : ''}
     <div class="meta">${tp ? `<span>${esc(tp)}</span>` : ''}${x.p.length ? `<span>${esc(x.p.map(p => prodNome[p] || p).join(', '))}</span>` : ''}${x.uf.length ? `<span>${esc(x.uf.join(', '))}</span>` : ''}</div>
+    ${x.ap && x.ap.length ? `<div class="apoio"><b>Material de apoio</b>${x.ap.map(a => `<div>${a.pdf ? `<a href="${esc(a.pdf)}" target="_blank" rel="noopener">${esc(a.t || 'PDF na Infoteca-e')}</a>` : esc(a.t)} <span class="orig">${ORIGEM[a.o] || ''}</span></div>`).join('')}</div>` : (x.k === 's' ? '<div class="apoio"><b>Material de apoio</b><div class="orig">Nenhum encontrado ainda</div></div>' : '')}
     ${x.w ? `<details><summary>Onde encontrar</summary><p>${esc(x.w)}</p></details>` : ''}
     <div class="acts">${link ? `<a href="${esc(link)}" target="_blank" rel="noopener">Página na Embrapa</a>` : ''}${x.pdf ? `<a href="${esc(x.pdf)}" target="_blank" rel="noopener">PDF</a>` : ''}<a href="https://wa.me/?text=${encodeURIComponent(zap)}" target="_blank" rel="noopener">Enviar no WhatsApp</a>${x.r ? `<button type="button" data-ouvir="${esc(x.c)}">Ouvir</button>` : ''}</div>
   </article>`;
