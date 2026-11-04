@@ -30,6 +30,9 @@ jobs:
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 21, cache: gradle }
       - run: npm ci
+      - name: Baixar o acervo da Amazônia (pacote mensal mais recente)
+        env: { GITHUB_TOKEN: "${{ github.token }}" }
+        run: python app/fonte/acervo.py
       - name: Montar a página e copiar para o projeto Android
         run: npm run android
       - name: Compilar o APK de teste

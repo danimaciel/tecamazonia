@@ -8,4 +8,5 @@
 - Material técnico e científico ficam separados (`config/tipos_publicacao.csv`); o produtor vê só o técnico.
 - Fontes de dados: Redape (exportação mensal) e releases `enriquecimento-AAAA-MM` de
   danimaciel/observatorio_embrapa, as mesmas dos iAgros.
-- `dados/` e `saida/` não vão para o repositório; o fluxo publica as saídas na release `pacote-AAAA-MM`.
+- `dados/`, `saida/` e `app/dados/acervo.json` não vão para o repositório; o fluxo publica as saídas na release
+  `pacote-AAAA-MM` e a página e o APK baixam o acervo dela na hora de montar.

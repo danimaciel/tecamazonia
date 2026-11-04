@@ -13,16 +13,17 @@
   --bg:#EEF3EF; --surface:#FFFFFF; --ink:#14231C; --muted:#4F625A; --line:#CFDBD3;
   --leaf:#1F6B4A; --leaf-soft:#DCEEE3; --acai:#5A2766; --acai-soft:#EFE3F2; --warn:#8A5A00; --warn-soft:#FBEFD6;
   --net-bg:#0E2A22; --net-ink:#EAF4EE; --net-muted:#A9C4B6; --net-line:#7FA894; --net-hot:#F2B43C; --net-prod:#E8F1EA; --net-unit:#8FB3C9;
+  --info:#1E4F7A; --info-soft:#E1ECF6;
   --c-cultivar:#6CCB8F; --c-pratica:#C58BD6; --c-processo:#F08A5D; --c-curso:#6FB7E9; --c-maquina:#B9C2C9; --c-outro:#5FD1C1;
   --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0F1813; --surface:#17231C; --ink:#E6EFE9; --muted:#A2B5AB; --line:#2A3A31;
-  --leaf:#6FCB9C; --leaf-soft:#1C3A2B; --acai:#D7A6E3; --acai-soft:#33203A; --warn:#F2C46B; --warn-soft:#3A2E14; color-scheme:dark}}
+  --leaf:#6FCB9C; --leaf-soft:#1C3A2B; --acai:#D7A6E3; --acai-soft:#33203A; --warn:#F2C46B; --warn-soft:#3A2E14; --info:#9CC7EE; --info-soft:#1B2C3B; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0F1813; --surface:#17231C; --ink:#E6EFE9; --muted:#A2B5AB; --line:#2A3A31;
-  --leaf:#6FCB9C; --leaf-soft:#1C3A2B; --acai:#D7A6E3; --acai-soft:#33203A; --warn:#F2C46B; --warn-soft:#3A2E14; color-scheme:dark}
+  --leaf:#6FCB9C; --leaf-soft:#1C3A2B; --acai:#D7A6E3; --acai-soft:#33203A; --warn:#F2C46B; --warn-soft:#3A2E14; --info:#9CC7EE; --info-soft:#1B2C3B; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5;
   padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:20px 48px}
@@ -41,7 +42,7 @@ h1 span{color:var(--acai)}
 @media (prefers-reduced-motion: reduce){#mic.on{animation:none}}
 #micmsg{font-size:14px;color:var(--muted);min-height:1.5em;margin:0}
 .row{display:flex;gap:8px;width:100%}
-#q{flex:1;min-width:0;font:inherit;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+#q,#q2{flex:1;min-width:0;font:inherit;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
 .btn{font:inherit;font-weight:700;padding:12px 16px;border-radius:12px;border:0;background:var(--ink);color:var(--bg);cursor:pointer}
 .btn.ghost{background:transparent;color:var(--leaf);border:1.5px solid var(--leaf)}
 .place{display:flex;gap:8px;align-items:center;font-size:15px;color:var(--muted);flex-wrap:wrap;justify-content:center}
@@ -92,6 +93,36 @@ details p{margin-top:8px;color:var(--muted);overflow-wrap:anywhere}
 .nethint{font-size:13px;color:var(--net-muted);margin:0}
 .card.flash{animation:flash 1.2s}
 @keyframes flash{0%{box-shadow:0 0 0 4px var(--leaf)}100%{box-shadow:0 0 0 0 transparent}}
+/* Modos: produtor (voz em destaque, só conteúdo aprovado) e extensionista (busca escrita, acervo todo) */
+.topo{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;width:100%}
+.modo{display:inline-flex;border:1.5px solid var(--line);border-radius:999px;padding:3px;gap:2px;background:var(--surface)}
+.modo button{font:inherit;font-size:14px;font-weight:700;border:0;background:transparent;color:var(--muted);padding:6px 12px;border-radius:999px;cursor:pointer}
+.modo button[aria-pressed="true"]{background:var(--leaf);color:var(--bg)}
+body[data-modo="ext"] .so-produtor, body:not([data-modo="ext"]) .so-ext{display:none !important}
+body[data-modo="ext"] header{order:0} body[data-modo="ext"] .ask.ext{order:1} body[data-modo="ext"] #extout{order:2}
+body[data-modo="ext"] .netwrap{order:3} body[data-modo="ext"] .note{order:4} body[data-modo="ext"] footer{order:5}
+.ask.ext{align-items:stretch;text-align:left}
+.micp{width:48px;flex:none;border-radius:12px;border:1.5px solid var(--leaf);background:transparent;color:var(--leaf);display:grid;place-items:center;cursor:pointer}
+.micp.on{background:var(--acai);color:var(--bg);border-color:var(--acai)}
+.micmsg{font-size:14px;color:var(--muted);min-height:1.5em;margin:0}
+.filtros{display:flex;gap:10px 14px;flex-wrap:wrap;font-size:15px;color:var(--muted)}
+.filtros label{display:flex;gap:6px;align-items:center}
+.filtros select{max-width:200px}
+#extout{display:flex;flex-direction:column;gap:12px}
+.resumo{display:flex;flex-wrap:wrap;gap:6px;font-size:15px;align-items:center}
+.k{font-weight:700;font-size:12.5px;padding:2px 8px;border-radius:999px}
+.k-s{background:var(--leaf-soft);color:var(--leaf)} .k-t{background:var(--info-soft);color:var(--info)}
+.k-c{background:var(--acai-soft);color:var(--acai)} .k-p{background:var(--warn-soft);color:var(--warn)}
+.rev{font-weight:700;color:var(--warn)} .rev.ok{color:var(--leaf)}
+.boas{position:fixed;inset:0;background:color-mix(in srgb,var(--bg) 94%,transparent);display:grid;place-items:center;padding:16px;z-index:10}
+.boas[hidden]{display:none}
+.boas .caixa{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px 18px;max-width:420px;width:100%;display:flex;flex-direction:column;gap:14px}
+.boas h2{font-family:var(--display);font-weight:800;font-size:24px;margin:0;text-align:center;text-wrap:balance}
+.boas p{margin:0;text-align:center;color:var(--muted);font-size:15px}
+.boas button{font:inherit;font-size:18px;font-weight:700;display:flex;align-items:center;gap:14px;padding:16px;border-radius:16px;border:2px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;text-align:left}
+.boas button:hover{border-color:var(--leaf)}
+.boas .ic{font-size:36px;line-height:1}
+.boas small{display:block;font-weight:400;font-size:14px;color:var(--muted);margin-top:2px}
 footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
 </style>
 </head>
@@ -99,11 +130,17 @@ footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);paddin
 
 <div class="app">
   <header>
-    <h1>Tec<span>Amazônia</span></h1>
-    <span class="tag">Protótipo · catálogo Embrapa 2022 · <span id="count"></span> soluções</span>
+    <div class="topo">
+      <h1>Tec<span>Amazônia</span></h1>
+      <div class="modo" role="group" aria-label="Quem está usando">
+        <button type="button" data-modo="produtor" aria-pressed="true">Produtor</button>
+        <button type="button" data-modo="ext" aria-pressed="false">Extensionista</button>
+      </div>
+    </div>
+    <span class="tag" id="status"></span>
   </header>
 
-  <section class="ask" aria-label="Fazer uma pergunta">
+  <section class="ask so-produtor" aria-label="Fazer uma pergunta">
     <h2>Conte o que está acontecendo na sua roça ou criação</h2>
     <button id="mic" aria-label="Falar"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v5"/></svg></button>
     <p id="micmsg">Toque e fale, ou escreva abaixo.</p>
@@ -121,6 +158,33 @@ footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);paddin
     </label>
   </section>
 
+  <section class="ask ext so-ext" aria-label="Buscar no acervo">
+    <h2>Buscar no acervo da Embrapa para a Amazônia</h2>
+    <form class="row" id="f2">
+      <input id="q2" type="search" placeholder="Ex.: sigatoka em banana" autocomplete="off" aria-label="Escreva o que procura">
+      <button id="mic2" class="micp" type="button" aria-label="Falar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v5"/></svg></button>
+      <button class="btn" type="submit">Buscar</button>
+    </form>
+    <p id="micmsg2" class="micmsg">Escreva ou toque no microfone para falar.</p>
+    <div class="filtros">
+      <label>Produto <select id="fprod"><option value="">todos</option></select></label>
+      <label>Estado <select id="uf2">
+        <option value="">todos</option>
+        <option value="AC">Acre</option><option value="AP">Amapá</option><option value="AM">Amazonas</option>
+        <option value="MA">Maranhão</option><option value="MT">Mato Grosso</option><option value="PA">Pará</option>
+        <option value="RO">Rondônia</option><option value="RR">Roraima</option><option value="TO">Tocantins</option>
+      </select></label>
+    </div>
+    <div class="chips" id="ftipos" role="group" aria-label="Tipos de conteúdo">
+      <button class="chip pick" type="button" data-k="s" aria-pressed="true">Soluções</button>
+      <button class="chip pick" type="button" data-k="t" aria-pressed="true">Publicações técnicas</button>
+      <button class="chip pick" type="button" data-k="c" aria-pressed="true">Científicas</button>
+      <button class="chip pick" type="button" data-k="p" aria-pressed="true">Projetos</button>
+    </div>
+  </section>
+
+  <section id="extout" class="so-ext" aria-live="polite"></section>
+
   <section class="netwrap" aria-label="Mapa de rede das soluções">
     <div class="nethead"><h2 id="nettitle">A rede de soluções da Amazônia</h2><span id="netsub"></span></div>
     <svg id="net" viewBox="0 0 600 470" role="img" aria-label="Mapa de rede das soluções"></svg>
@@ -128,16 +192,26 @@ footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);paddin
     <p class="nethint" id="nethint">Toque num produto para ver as soluções dele.</p>
   </section>
 
-  <section class="examples" aria-label="Exemplos">
+  <section class="examples so-produtor" aria-label="Exemplos">
     <p>Experimente uma fala de exemplo:</p>
     <div class="chips" id="ex"></div>
   </section>
 
-  <section id="out" aria-live="polite"></section>
+  <section id="out" class="so-produtor" aria-live="polite"></section>
 
-  <p class="note" id="vozinfo">No app final, a voz é reconhecida dentro do próprio celular, sem internet. Neste protótipo o microfone usa o reconhecimento do navegador: funciona abrindo o arquivo no Google Chrome. Dentro do Claude, use os exemplos ou escreva.</p>
+  <p class="note" id="vozinfo">A voz funciona no app Android, com o reconhecimento do próprio celular, e no Google Chrome. Nos outros navegadores, escreva a pergunta.</p>
 
-  <footer>Conteúdo: Painel de soluções TecAmazônia, extrato 2022, com descrições resumidas. As recomendações saem só do catálogo, sem texto inventado. Fichas ainda não revisadas por pesquisadores.</footer>
+  <footer class="so-produtor">Conteúdo: Painel de soluções TecAmazônia (extrato 2022) e as soluções e publicações técnicas que a equipe já aprovou. As recomendações saem só desse catálogo, sem texto inventado.</footer>
+  <footer class="so-ext">Conteúdo: acervo público da Embrapa (Redape), recortado para a Amazônia pela marcação do Observatório de Pesquisa da Embrapa. Material técnico e científico vêm separados pelo tipo de publicação. O que ainda não passou pela curadoria aparece como "Em revisão" e não chega ao produtor. Não é um serviço oficial da Embrapa.</footer>
+</div>
+
+<div class="boas" id="boasvindas" hidden role="dialog" aria-modal="true" aria-labelledby="boastit">
+  <div class="caixa">
+    <h2 id="boastit">Quem vai usar o TecAmazônia?</h2>
+    <p>Dá para trocar depois, no botão do topo.</p>
+    <button type="button" data-modo="produtor"><span class="ic" aria-hidden="true">🧑‍🌾</span><span>Eu produzo<small>Na roça, na criação ou no extrativismo. Fale ou escreva o que está acontecendo.</small></span></button>
+    <button type="button" data-modo="ext"><span class="ic" aria-hidden="true">📋</span><span>Sou extensionista ou técnico<small>Busca no acervo todo da Amazônia, com filtros e publicações científicas.</small></span></button>
+  </div>
 </div>
 
 <script>
@@ -145,7 +219,6 @@ const DATA = __DATA__;
 const $ = s => document.querySelector(s);
 const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim();
 const unit = r => (r.u||'').replace(/ e$/,'');
-$('#count').textContent = DATA.length;
 DATA.forEach(r => { r._t = norm(r.t); r._d = norm(r.d + ' ' + r.c + ' ' + r.p.join(' ')); });
 
 // Produtos e sinônimos regionais -> produto do catálogo
@@ -318,39 +391,41 @@ function speak(t, force){
   try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang='pt-BR'; if (voz) u.voice = voz; u.rate = 0.95; speechSynthesis.speak(u); } catch(e){}
 }
 
-// Microfone (reconhecimento do navegador no protótipo)
+// Microfone: no app, reconhecimento do próprio celular (plugin do Capacitor, funciona sem internet quando o
+// pacote de português está instalado no aparelho); no navegador, o reconhecimento do Chrome.
 let userTalked = false;
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-const mic = $('#mic'), msg = $('#micmsg');
-// No app Android/iOS a voz vem do reconhecimento do próprio celular (plugin do Capacitor),
-// que funciona sem internet quando o pacote de português está instalado no aparelho.
 const VozNativa = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()
   && window.Capacitor.Plugins && window.Capacitor.Plugins.SpeechRecognition;
-async function ouvirNativo(){
-  try {
-    const p = await VozNativa.requestPermissions();
-    if (p.speechRecognition !== 'granted'){ msg.textContent = 'Preciso da permissão do microfone. Você também pode escrever abaixo.'; return; }
-    mic.classList.add('on'); msg.textContent = 'Ouvindo… fale sua demanda.';
-    const r = await VozNativa.start({ language: 'pt-BR', maxResults: 1, partialResults: false, popup: true, prompt: 'Fale o que está acontecendo' });
-    mic.classList.remove('on');
-    const t = (r && r.matches && r.matches[0]) || '';
-    if (t){ $('#q').value = t; msg.textContent = 'Toque e fale, ou escreva abaixo.'; userTalked = true; run(t, true); }
-    else msg.textContent = 'Não consegui ouvir. Tente de novo ou escreva.';
-  } catch(e){ mic.classList.remove('on'); msg.textContent = 'Não consegui ouvir. Tente de novo ou escreva.'; }
-}
-mic.addEventListener('click', () => {
-  if (VozNativa){ ouvirNativo(); return; }
-  if (!SR){ msg.textContent = 'Este navegador não reconhece voz. Abra no Google Chrome ou escreva abaixo.'; return; }
+const mic = $('#mic'), msg = $('#micmsg');
+function ouvir(botao, aviso, campo, aoOuvir){
+  const pronto = aviso.dataset.pronto || aviso.textContent; aviso.dataset.pronto = pronto;
+  const falhou = t => { botao.classList.remove('on'); aviso.textContent = t; };
+  const fim = t => { botao.classList.remove('on'); if (!t) return falhou('Não consegui ouvir. Tente de novo ou escreva.'); campo.value = t; aviso.textContent = pronto; userTalked = true; aoOuvir(t); };
+  if (VozNativa){
+    (async () => {
+      try {
+        const p = await VozNativa.requestPermissions();
+        if (p.speechRecognition !== 'granted') return falhou('Preciso da permissão do microfone. Você também pode escrever.');
+        botao.classList.add('on'); aviso.textContent = 'Ouvindo… fale sua demanda.';
+        const r = await VozNativa.start({ language: 'pt-BR', maxResults: 1, partialResults: false, popup: true, prompt: 'Fale o que está acontecendo' });
+        fim((r && r.matches && r.matches[0]) || '');
+      } catch(e){ falhou('Não consegui ouvir. Tente de novo ou escreva.'); }
+    })();
+    return;
+  }
+  if (!SR) return falhou('Este navegador não reconhece voz. Abra no Google Chrome ou escreva.');
   let rec;
-  try { rec = new SR(); } catch(e){ msg.textContent = 'O microfone não está disponível aqui. Use os exemplos ou escreva.'; return; }
+  try { rec = new SR(); } catch(e){ return falhou('O microfone não está disponível aqui. Escreva sua pergunta.'); }
   rec.lang = 'pt-BR'; rec.interimResults = true; rec.maxAlternatives = 1;
-  let final = '';
-  rec.onstart = () => { mic.classList.add('on'); msg.textContent = 'Ouvindo… fale sua demanda.'; };
-  rec.onresult = e => { let t=''; for (const r of e.results) t += r[0].transcript; $('#q').value = t; if (e.results[e.results.length-1].isFinal) final = t; };
-  rec.onerror = e => { mic.classList.remove('on'); msg.textContent = (e.error==='not-allowed'||e.error==='service-not-allowed') ? 'O microfone foi bloqueado aqui. Abra o arquivo no Chrome ou use os exemplos.' : (e.error==='network' ? 'O reconhecimento do navegador precisa de internet. No app final ele roda no celular.' : 'Não consegui ouvir. Tente de novo ou escreva.'); };
-  rec.onend = () => { mic.classList.remove('on'); const t = final || $('#q').value; if (t){ msg.textContent = 'Toque e fale, ou escreva abaixo.'; userTalked = true; run(t, true); } };
-  try { rec.start(); } catch(e){ msg.textContent = 'O microfone não está disponível aqui. Use os exemplos ou escreva.'; }
-});
+  let final = '', parcial = '', erro = false;
+  rec.onstart = () => { botao.classList.add('on'); aviso.textContent = 'Ouvindo… fale sua demanda.'; };
+  rec.onresult = e => { let t=''; for (const r of e.results) t += r[0].transcript; parcial = t; campo.value = t; if (e.results[e.results.length-1].isFinal) final = t; };
+  rec.onerror = e => { erro = true; falhou((e.error==='not-allowed'||e.error==='service-not-allowed') ? 'O microfone foi bloqueado aqui. Libere o microfone ou escreva.' : (e.error==='network' ? 'O reconhecimento do navegador precisa de internet. No app ele roda no celular.' : 'Não consegui ouvir. Tente de novo ou escreva.')); };
+  rec.onend = () => { const t = final || parcial; if (t) fim(t); else if (!erro) falhou('Não consegui ouvir. Tente de novo ou escreva.'); };
+  try { rec.start(); } catch(e){ falhou('O microfone não está disponível aqui. Escreva sua pergunta.'); }
+}
+mic.addEventListener('click', () => ouvir(mic, msg, $('#q'), t => run(t, true)));
 
 // ---------- Mapa de rede ----------
 const ICON = {'Abacaxi':'🍍','Açaí':'🫐','Amendoim forrageiro (Arachis pintoi)':'🌱','Arroz':'🌾','Banana':'🍌','Bovino':'🐂','Leite':'🥛','Cacau':'🍫','Café':'☕','Café canéfora':'☕','Café arábica':'☕','Camarão':'🦐','Castanha do pará':'🌰','Copaíba':'🌳','Dendê':'🌴','Feijão':'🫘','Goiaba':'🍐','Laranja':'🍊','Látex':'🌳','Leite':'🥛','Lenha':'🔥','Madeira':'🪵','Mandioca':'🥔','Maracujá':'🍈','Matrinxã':'🐟','Melancia':'🍉','Milho':'🌽','Peixes':'🐟','Tambaqui':'🐠','Pequi':'🍈','Pimenta do reino':'🌶️','Soja':'🫘','Sorgo':'🌾'};
@@ -510,7 +585,187 @@ function openCard(id){
   const r = DATA.find(r=>r.id==id); speak(`${r.t}. ${firstSentence(r.d)}`, true);
 }
 
-drawOverview();
+// ---------- Acervo completo: modo extensionista e conteúdo aprovado para o produtor ----------
+// Produto do catálogo de 2022 -> produto(s) da taxonomia do Observatório
+const P2022 = {'Abacaxi':'abacaxi','Açaí':'acai','Amendoim forrageiro (Arachis pintoi)':'pastagem','Arroz':'arroz','Banana':'banana',
+  'Bovino':['bovinos','pastagem'],'Leite':'leite','Cacau':['cacau','cupuacu'],'Café canéfora':'cafe','Café arábica':'cafe','Camarão':'camarao',
+  'Castanha do pará':'castanha_para','Copaíba':'andiroba_copaiba','Dendê':'dende','Feijão':'feijao','Laranja':'laranja','Látex':'borracha',
+  'Madeira':['florestas_plantadas','teca_mogno','extrativismo'],'Lenha':'florestas_plantadas','Mandioca':'mandioca','Maracujá':'maracuja',
+  'Matrinxã':'peixes','Melancia':'melancia','Milho':'milho','Peixes':['peixes','tambaqui','pirarucu','tilapia'],'Tambaqui':'tambaqui',
+  'Pequi':'frutas_nativas','Pimenta do reino':'pimenta_reino','Soja':'soja','Sorgo':'sorgo'};
+const ID2022 = {}; Object.entries(P2022).forEach(([n, ids]) => [].concat(ids).forEach(id => { if (!ID2022[id]) ID2022[id] = n; }));
+// Falas para produtos que não estavam no catálogo de 2022
+const SIN_EXT = {aves:['galinha','galinhas','frango','frangos','ovo','ovos','poedeira','aves'], suinos:['porco','porcos','suino','suinos','leitao'],
+  mel:['abelha','abelhas','mel','meliponicultura','jandaira'], ovinos_caprinos:['ovelha','ovelhas','carneiro','cabra','cabras','bode'],
+  bubalinos:['bufalo','bufala','bufalos'], cupuacu:['cupuacu','cupuacuzeiro'], guarana:['guarana'], coco:['coco','coqueiro'], pupunha:['pupunha'],
+  pirarucu:['pirarucu'], tilapia:['tilapia'], mamao:['mamao'], hortalicas:['horta','hortalica','hortalicas','verdura','verduras'],
+  tomate:['tomate'], cana:['cana'], babacu:['babacu'], urucum:['urucum'], caju:['caju'], acerola:['acerola'], palmito:['palmito']};
+const ICON_ID = {abacaxi:'🍍',acai:'🫐',arroz:'🌾',banana:'🍌',bovinos:'🐂',pastagem:'🌱',leite:'🥛',cacau:'🍫',cupuacu:'🍈',cafe:'☕',camarao:'🦐',
+  castanha_para:'🌰',andiroba_copaiba:'🌳',dende:'🌴',feijao:'🫘',laranja:'🍊',borracha:'🌳',florestas_plantadas:'🌲',teca_mogno:'🪵',extrativismo:'🌿',
+  mandioca:'🥔',maracuja:'🍈',peixes:'🐟',tambaqui:'🐠',pirarucu:'🐟',tilapia:'🐟',pimenta_reino:'🌶️',soja:'🫘',sorgo:'🌾',milho:'🌽',melancia:'🍉',
+  aves:'🐔',suinos:'🐖',mel:'🍯',ovinos_caprinos:'🐐',bubalinos:'🐃',coco:'🥥',guarana:'🍒',pupunha:'🌴',mamao:'🍈',hortalicas:'🥬',tomate:'🍅',
+  eucalipto:'🌲',cana:'🎋',babacu:'🌴',palmito:'🌴',equinos:'🐎',goiaba:'🍐',caju:'🍎',acerola:'🍒',frutas:'🍇',algodao:'☁️',batata_doce:'🍠',
+  abobora:'🎃',pimentao:'🌶️',frutas_nativas:'🍈',macauba:'🌴',moluscos:'🦪',urucum:'🔴'};
+const NOME_K = {s:'Solução tecnológica', t:'Publicação técnica', c:'Publicação científica', p:'Projeto'};
+const PLURAL_K = {s:'soluções', t:'técnicas', c:'científicas', p:'projetos'};
+// Palavras que só nomeiam o produto saem da busca por texto (o filtro de produto já cuida delas);
+// as que também dizem uma necessidade, como "farinha", continuam
+const PALAVRAS_NEC = new Set(NECESSIDADES.flatMap(n => n.fala));
+const PALAVRAS_PROD = new Set(PRODUTOS.flatMap(([p, ws]) => ws).concat(Object.values(SIN_EXT).flat()).filter(w => !PALAVRAS_NEC.has(w)));
+let ufAuto = false, ACERVO = null, acervoErro = false, extLista = [], extMostra = 20;
+const prodNome = {};
+const fmt = n => n.toLocaleString('pt-BR');
+function linkDe(x){ if (!x.l) return ''; if (/^https?:/.test(x.l)) return x.l; return ACERVO.dominio + ACERVO.prefixo[x.k] + x.c.split(' ')[1] + '/' + x.l; }
+
+async function carregarAcervo(){
+  try {
+    const r = await fetch('dados/acervo.json');
+    if (!r.ok) throw new Error(r.status);
+    ACERVO = await r.json();
+  } catch(e){ acervoErro = true; atualizarStatus(); if (modo === 'ext') buscarExt(); return; }
+  ACERVO.produtos.forEach(p => { prodNome[p.id] = p.nome; });
+  const cont = {};
+  ACERVO.itens.forEach(x => { x._t = norm(x.t); x._n = x._t + ' ' + norm(x.r || ''); x.p.forEach(p => { cont[p] = (cont[p]||0) + 1; }); });
+  $('#fprod').innerHTML = '<option value="">todos</option>' + ACERVO.produtos.filter(p => cont[p.id])
+    .sort((a,b) => a.nome.localeCompare(b.nome, 'pt')).map(p => `<option value="${p.id}">${esc(p.nome)} (${fmt(cont[p.id])})</option>`).join('');
+  // O que a curadoria aprovou entra no catálogo do produtor
+  const aprov = ACERVO.itens.filter(x => (x.k === 's' || x.k === 't') && x.rev === 'aprovado');
+  aprov.forEach(x => {
+    const r = {id: x.c, t: x.t, d: x.r || '', l: x.pdf || linkDe(x), c: NOME_K[x.k], o: '', w: x.w || '', u: x.u || '',
+               p: [...new Set(x.p.map(id => ID2022[id] || prodNome[id] || id))], ac: false};
+    r._t = norm(r.t); r._d = norm(r.d + ' ' + r.c + ' ' + r.p.join(' '));
+    DATA.push(r);
+  });
+  if (aprov.length && modo !== 'ext' && !last) drawOverview();
+  atualizarStatus();
+  if (modo === 'ext') buscarExt();
+}
+
+function buscarExt(){
+  const out = $('#extout');
+  if (!ACERVO){
+    out.innerHTML = `<div class="note">${acervoErro ? 'O acervo completo não veio nesta versão da página. Ele está no app Android e na página publicada.' : 'Carregando o acervo da Amazônia…'}</div>`;
+    return;
+  }
+  const texto = $('#q2').value.trim();
+  const it = interpret(texto);
+  // Estado dito na fala vira filtro; se a fala seguinte não cita estado, o filtro automático sai
+  if (it.uf && (!$('#uf2').value || ufAuto)){ $('#uf2').value = it.uf; ufAuto = true; }
+  else if (!it.uf && ufAuto){ $('#uf2').value = ''; ufAuto = false; }
+  const uf = $('#uf2').value, fprod = $('#fprod').value;
+  const tipos = new Set([...document.querySelectorAll('#ftipos [aria-pressed="true"]')].map(b => b.dataset.k));
+  const pids = new Set();
+  it.prods.forEach(p => [].concat(P2022[p] || []).forEach(id => pids.add(id)));
+  for (const [id, ws] of Object.entries(SIN_EXT)) if (ws.some(w => has(it.q, w))) pids.add(id);
+  const toks = it.toks.filter(t => !PALAVRAS_PROD.has(t));
+  // Palavra rara pesa mais que palavra comum ("cipó" vale mais que "pasto")
+  const N = ACERVO.itens.length;
+  const peso = Object.fromEntries(toks.map(t => [t, Math.log(1 + N / (1 + ACERVO.itens.reduce((n, x) => n + (x._n.includes(t) ? 1 : 0), 0)))]));
+  const res = [];
+  for (const x of ACERVO.itens){
+    if (!tipos.has(x.k)) continue;
+    if (fprod && !x.p.includes(fprod)) continue;
+    if (uf && !x.uf.includes(uf)) continue;
+    let s = 0, hits = 0;
+    if (pids.size){ if (!x.p.some(p => pids.has(p))) continue; s += 10; }
+    for (const t of toks){ if (x._t.includes(t)){ s += 3*peso[t]; hits++; } else if (x._n.includes(t)){ s += peso[t]; hits++; } }
+    if (toks.length && !hits && !pids.size) continue;
+    s += {s:2, t:1.5, c:0, p:0.5}[x.k] + (x.am ? 1 : 0) + (x.rev === 'aprovado' ? 1 : 0);
+    res.push({x, s, hits});
+  }
+  // Com produto e palavras, fica só o que tem as palavras (se houver); sem isso, o produto inteiro
+  if (toks.length && pids.size && res.some(r => r.hits)) res.splice(0, res.length, ...res.filter(r => r.hits));
+  res.sort((a,b) => b.s - a.s || (+b.x.a || 0) - (+a.x.a || 0));
+  extLista = res.map(r => r.x); extMostra = 20;
+  listarExt(pids);
+  drawRedeExt(extLista, !!(texto || uf || fprod || tipos.size < 4));
+}
+function listarExt(pids){
+  const L = extLista, cont = {s:0, t:0, c:0, p:0};
+  L.forEach(x => { cont[x.k]++; });
+  let h = `<div class="resumo"><b>${fmt(L.length)} resultado${L.length === 1 ? '' : 's'}</b>${Object.entries(cont).filter(([k,n]) => n).map(([k,n]) => `<span class="k k-${k}">${fmt(n)} ${PLURAL_K[k]}</span>`).join('')}</div>`;
+  if (pids && pids.size) h += `<div class="understood">Entendi: ${[...pids].map(id => `<span class="pill">${esc(prodNome[id] || id)}</span>`).join('')}</div>`;
+  if (!L.length) h += '<div class="warn">Nada encontrado. Tente outras palavras ou tire algum filtro.</div>';
+  h += L.slice(0, extMostra).map(cardExt).join('');
+  if (L.length > extMostra) h += `<button class="btn ghost" type="button" id="maisext">Mostrar mais ${Math.min(20, L.length - extMostra)}</button>`;
+  $('#extout').innerHTML = h;
+}
+function cardExt(x){
+  const link = linkDe(x), tp = x.tp !== undefined ? ACERVO.tipos[x.tp] : '';
+  const rev = (x.k === 's' || x.k === 't') ? (x.rev === 'aprovado' ? '<span class="rev ok">Aprovada pela curadoria</span>' : '<span class="rev">Em revisão</span>') : '';
+  const zap = `${x.t}${link ? '\n' + link : ''}${x.pdf ? '\nPDF: ' + x.pdf : ''}\n\nEnviado pelo TecAmazônia`;
+  return `<article class="card">
+    <div class="meta"><span class="k k-${x.k}">${NOME_K[x.k]}</span>${x.a ? `<span>${esc(x.a)}</span>` : ''}${x.u ? `<span>${esc(x.u)}</span>` : ''}${rev}</div>
+    <h4>${esc(x.t)}</h4>
+    ${x.r ? `<p>${esc(x.r)}</p>` : ''}
+    <div class="meta">${tp ? `<span>${esc(tp)}</span>` : ''}${x.p.length ? `<span>${esc(x.p.map(p => prodNome[p] || p).join(', '))}</span>` : ''}${x.uf.length ? `<span>${esc(x.uf.join(', '))}</span>` : ''}</div>
+    ${x.w ? `<details><summary>Onde encontrar</summary><p>${esc(x.w)}</p></details>` : ''}
+    <div class="acts">${link ? `<a href="${esc(link)}" target="_blank" rel="noopener">Página na Embrapa</a>` : ''}${x.pdf ? `<a href="${esc(x.pdf)}" target="_blank" rel="noopener">PDF</a>` : ''}<a href="https://wa.me/?text=${encodeURIComponent(zap)}" target="_blank" rel="noopener">Enviar no WhatsApp</a>${x.r ? `<button type="button" data-ouvir="${esc(x.c)}">Ouvir</button>` : ''}</div>
+  </article>`;
+}
+function drawRedeExt(L, filtrado){
+  sizeNet();
+  const narrow = W < 520, pc = {}, uc = {}, pu = {};
+  L.forEach(x => { const u = x.u ? shortU(x.u) : ''; if (u) uc[u] = (uc[u]||0) + 1;
+    x.p.forEach(p => { pc[p] = (pc[p]||0) + 1; if (u){ const k = p + '|' + u; pu[k] = (pu[k]||0) + 1; } }); });
+  const prods = Object.keys(pc).sort((a,b) => pc[b] - pc[a]).slice(0, narrow ? 14 : 20);
+  const units = Object.keys(uc).sort((a,b) => uc[b] - uc[a]).slice(0, narrow ? 7 : 10);
+  $('#nettitle').textContent = filtrado ? 'Rede dos resultados' : 'Rede do acervo da Amazônia';
+  if (!prods.length){ svg.innerHTML = ''; $('#netsub').textContent = ''; $('#legend').innerHTML = ''; $('#nethint').textContent = 'Sem produtos marcados nestes resultados.'; return; }
+  const max = pc[prods[0]], base = narrow ? 11 : 13;
+  const nodes = [
+    ...prods.map(p => ({id:'p:'+p, kind:'prod', r: base + base*Math.sqrt(pc[p]/max), fill:'var(--net-prod)', icon: ICON_ID[p] || '🌿',
+      label: (narrow && pc[p] < max*0.3) ? '' : cut(prodNome[p] || p, 16), pad: narrow ? 10 : 6, big: pc[p] >= max*0.4, charge: narrow ? -95 : -140,
+      aria: `${prodNome[p] || p}, ${fmt(pc[p])} documentos`,
+      onTap: () => { $('#fprod').value = p; buscarExt(); $('#extout').scrollIntoView({behavior: reduce ? 'auto' : 'smooth', block: 'start'}); }})),
+    ...units.map(u => ({id:'u:'+u, kind:'unit', r: narrow ? 5 : 7, label: narrow ? '' : u, charge: narrow ? -70 : -260, aria: 'Embrapa ' + u}))
+  ];
+  const ids = new Set(nodes.map(n => n.id));
+  const pmax = Math.max(1, ...Object.values(pu));
+  const links = Object.entries(pu).map(([k,v]) => { const [p,u] = k.split('|'); return {source:'p:'+p, target:'u:'+u, w: 0.6 + 3*v/pmax, len: 95, str: 0.15, v}; })
+    .filter(l => ids.has(l.source) && ids.has(l.target) && l.v >= Math.max(1, pmax*0.03));
+  layout(nodes, links, narrow ? {gx:0.09, gy:0.07} : {gx:0.05, gy:0.09});
+  render(nodes, links);
+  legend(new Set(['unit']));
+  $('#netsub').textContent = `${fmt(L.length)} documentos · ${prods.length} produtos · ${units.length} unidades`;
+  $('#nethint').textContent = 'Cada produto se liga às unidades da Embrapa que mais têm material sobre ele. Toque num produto para filtrar.';
+}
+$('#f2').addEventListener('submit', e => { e.preventDefault(); buscarExt(); });
+$('#fprod').addEventListener('change', buscarExt);
+$('#uf2').addEventListener('change', () => { ufAuto = false; buscarExt(); });
+$('#ftipos').addEventListener('click', e => {
+  const b = e.target.closest('[data-k]'); if (!b) return;
+  const on = b.getAttribute('aria-pressed') !== 'true';
+  if (!on && document.querySelectorAll('#ftipos [aria-pressed="true"]').length === 1) return;  // sempre fica um tipo
+  b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.classList.toggle('pick', on); buscarExt();
+});
+$('#extout').addEventListener('click', e => {
+  if (e.target.closest('#maisext')){ extMostra += 20; listarExt(); return; }
+  const b = e.target.closest('[data-ouvir]'); if (!b) return;
+  const x = ACERVO.itens.find(x => x.c === b.dataset.ouvir); if (x) speak(`${x.t}. ${x.r || ''}`, true);
+});
+$('#mic2').addEventListener('click', () => ouvir($('#mic2'), $('#micmsg2'), $('#q2'), () => buscarExt()));
+
+// ---------- Modo de uso ----------
+let modo = 'produtor';
+function atualizarStatus(){
+  const st = $('#status');
+  if (modo === 'ext') st.textContent = ACERVO ? `Acervo Amazônia · Redape ${ACERVO.redape} · ${fmt(ACERVO.itens.length)} documentos` : (acervoErro ? 'Acervo completo indisponível nesta página' : 'Carregando o acervo…');
+  else st.textContent = `Catálogo revisado · ${DATA.length} soluções`;
+}
+function setModo(m, salvar){
+  modo = m; document.body.dataset.modo = m;
+  document.querySelectorAll('.modo button').forEach(b => b.setAttribute('aria-pressed', b.dataset.modo === m ? 'true' : 'false'));
+  if (salvar){ try { localStorage.setItem('tecamazonia-modo', m); } catch(e){} }
+  $('#boasvindas').hidden = true;
+  atualizarStatus();
+  if (m === 'ext') buscarExt(); else if (last) run(last.text, false, last.extra); else drawOverview();
+}
+document.querySelectorAll('[data-modo]').forEach(b => b.addEventListener('click', () => setModo(b.dataset.modo, true)));
+let salvo = null; try { salvo = localStorage.getItem('tecamazonia-modo'); } catch(e){}
+setModo(salvo === 'ext' ? 'ext' : 'produtor', false);
+if (!salvo) $('#boasvindas').hidden = false;
+carregarAcervo();
 </script>
 </body>
 </html>
