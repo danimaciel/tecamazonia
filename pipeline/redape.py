@@ -27,8 +27,16 @@ BASES = {
 
 def arquivos(doi: str, prefixo: str) -> dict:
     """{AAAA-MM: (id, tamanho)} dos arquivos do dataset na versão mais recente."""
-    r = requests.get(f"{URL}/api/datasets/:persistentId/", params={"persistentId": doi}, timeout=120)
-    r.raise_for_status()
+    for i in range(5):  # o Redape às vezes demora a responder: tenta de novo antes de desistir
+        try:
+            r = requests.get(f"{URL}/api/datasets/:persistentId/", params={"persistentId": doi}, timeout=300)
+            r.raise_for_status()
+            break
+        except requests.RequestException as ex:
+            print(f"  Redape não respondeu ({ex.__class__.__name__}); tentativa {i + 1} de 5")
+            if i == 4:
+                raise
+            time.sleep(30 * (i + 1))
     out = {}
     for f in r.json()["data"]["latestVersion"]["files"]:
         df = f["dataFile"]
