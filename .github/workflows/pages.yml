@@ -1,7 +1,8 @@
 name: Publicar app no GitHub Pages
 
 # Publica a pasta app/ como página: https://danimaciel.github.io/tecamazonia/
-# Roda quando o app muda na main ou quando alguém pede (Actions → Run workflow).
+# Roda quando o app muda na main, quando sai um pacote mensal novo (o fluxo atualizar.yml chama este)
+# ou quando alguém pede (Actions → Run workflow).
 on:
   push:
     branches: [main]
@@ -27,6 +28,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
+      - name: Baixar o acervo da Amazônia (pacote mensal mais recente)
+        env: { GITHUB_TOKEN: "${{ github.token }}" }
+        run: python app/fonte/acervo.py
       - name: Gerar a página a partir do modelo e do catálogo
         run: python app/fonte/construir.py
       - uses: actions/configure-pages@v5
