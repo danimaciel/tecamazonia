@@ -10,7 +10,7 @@ chegar ao app. Não é um serviço oficial da Embrapa.
 
 | Parte | O que é |
 |---|---|
-| `app/` | Protótipo do app (uma página, roda no navegador sem internet). Hoje usa o painel de soluções de 2022 |
+| `app/` | Protótipo do app (uma página, roda no navegador sem internet), publicado em https://danimaciel.github.io/tecamazonia/. Hoje usa o painel de soluções de 2022 |
 | `pipeline/` | Recorte da Amazônia: Redape (exportação mensal) + marcação do Observatório (produtos, estados, biomas) |
 | `config/tipos_publicacao.csv` | Qual tipo de publicação é material técnico e qual é científico |
 | `curadoria/` | Decisões da equipe sobre o que entra no app |

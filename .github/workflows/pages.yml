@@ -1,0 +1,36 @@
+name: Publicar app no GitHub Pages
+
+# Publica a pasta app/ como página: https://danimaciel.github.io/tecamazonia/
+# Roda quando o app muda na main ou quando alguém pede (Actions → Run workflow).
+on:
+  push:
+    branches: [main]
+    paths: ["app/**", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Gerar a página a partir do modelo e do catálogo
+        run: python app/fonte/construir.py
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: app }
+      - id: deploy
+        uses: actions/deploy-pages@v4
