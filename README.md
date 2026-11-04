@@ -15,6 +15,8 @@ chegar ao app. Não é um serviço oficial da Embrapa.
 | `config/tipos_publicacao.csv` | Qual tipo de publicação é material técnico e qual é científico |
 | `curadoria/` | Decisões da equipe sobre o que entra no app |
 | `.github/workflows/atualizar.yml` | Fluxo mensal que gera o pacote do app e a fila de curadoria |
+| `android/`, `capacitor.config.json` | O mesmo app empacotado para Android com Capacitor; voz e leitura em voz alta pelo próprio celular |
+| `.github/workflows/android.yml` | Gera o APK de teste e deixa na release `android-teste` |
 
 ## Como o conteúdo é escolhido
 
@@ -28,7 +30,8 @@ chegar ao app. Não é um serviço oficial da Embrapa.
   científico (artigos, anais, resumos, livros científicos, teses) fica no "Para saber mais" do extensionista.
   Tipo novo que não está na tabela aparece no resumo do fluxo para alguém classificar. O relatório também conta
   quantos de cada tipo têm PDF na Infoteca-e (técnico) ou no Alice (científico), como checagem.
-- **Curadoria:** ver `curadoria/LEIAME.md`.
+- **Curadoria:** o produtor só vê o que a equipe aprovou; a fila mensal vem ordenada do mais amazônico
+  (bioma Amazônia) para o menos. Ver `curadoria/LEIAME.md`.
 
 As mesmas fontes alimentam o [iAgro Embrapa](https://github.com/danimaciel/iagro-embrapa); `pipeline/redape.py`
 foi copiado de lá.
@@ -41,6 +44,7 @@ python pipeline/redape.py            # baixa a exportação mais recente do Reda
 python pipeline/observatorio.py      # baixa a marcação do Observatório para dados/enriquecimento
 python pipeline/recorte.py 2026-10   # gera saida/pacote.json, pendentes.csv, tipos_publicacao.csv e resumo.md
 python app/fonte/construir.py        # gera app/index.html a partir do modelo e do catálogo
+npm ci && npm run android            # copia o app para o projeto Android (abrir android/ no Android Studio)
 ```
 
 ## Próximos passos
@@ -48,4 +52,4 @@ python app/fonte/construir.py        # gera app/index.html a partir do modelo e 
 1. Rodar o fluxo uma vez e conferir em `tipos_publicacao.csv` a classificação dos tipos reais do Redape.
 2. Trocar o catálogo de 2022 do app pelo `pacote-produtor.json`, com busca por significado (multilingual-e5,
    como no iAgro) além das regras de produto e necessidade.
-3. Empacotar o app para Android, com reconhecimento de voz dentro do celular.
+3. Testar o APK em celulares de campo e criar a conta na Google Play (pessoal ou da Embrapa) para publicar.

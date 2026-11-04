@@ -16,10 +16,12 @@ não está na tabela cai numa regra por palavras e fica marcado para revisão no
 técnica editada pela Embrapa; PDF no Alice indica produção científica (só informada no relatório).
 
 Saídas em saida/
-  pacote.json              tudo o que o app usa (soluções, técnicas, científicas, projetos, produtos)
-  pacote-produtor.json     só soluções e publicações técnicas, para o celular
+  pacote.json              tudo o que o app usa (soluções, técnicas, científicas, projetos, produtos), para o
+                           extensionista; o que ainda não foi revisado vai com rev vazio ("em revisão")
+  pacote-produtor.json     só soluções e publicações técnicas APROVADAS pela curadoria, para o celular
   tipos_publicacao.csv     cada tipo encontrado, a camada usada, de onde veio e quantos há
-  pendentes.csv            soluções e publicações técnicas da Amazônia ainda sem decisão da curadoria
+  pendentes.csv            soluções e publicações técnicas da Amazônia ainda sem decisão da curadoria,
+                           da mais amazônica para a menos (coluna prioridade)
   resumo.md                números do recorte, para o resumo do fluxo no GitHub
 
 Uso:  python pipeline/recorte.py 2026-10 [--so-bioma]
@@ -80,6 +82,20 @@ def camadas(tipos: pd.Series) -> pd.DataFrame:
         else:
             linhas.append((t, "revisar", "sem regra"))
     return pd.DataFrame(linhas, columns=["tipo", "camada", "origem"]).set_index("tipo")
+
+
+PRIORIDADES = {1: "bioma Amazônia", 2: "só estado do núcleo amazônico (AC, AM, AP, PA, RO, RR)",
+               3: "só MT, MA ou TO, que também têm Cerrado"}
+UFS_NUCLEO = {"AC", "AM", "AP", "PA", "RO", "RR"}
+
+
+def prioridade(d: dict) -> tuple:
+    """Quão amazônico é o documento, para a curadoria revisar primeiro o que mais interessa à região."""
+    if BIOMA in d["b"]:
+        return 1, PRIORIDADES[1]
+    if set(d["uf"]) & UFS_NUCLEO:
+        return 2, PRIORIDADES[2]
+    return 3, PRIORIDADES[3]
 
 
 def main(mes: str, so_bioma: bool) -> None:
@@ -147,7 +163,7 @@ def main(mes: str, so_bioma: bool) -> None:
             prj.append({"c": "PRJ " + r["ID"], "t": limpo(r["Título"]), "a": limpo(r["mês/ano de início"])[-4:],
                         "u": limpo(r["Unidade líder"]), "l": limpo(r["Página do projeto no Portal Embrapa"]), **m})
 
-    # Curadoria: quem já foi revisado leva a decisão; reprovados saem do app
+    # Curadoria: reprovados saem de tudo; o produtor só recebe o que foi aprovado
     rev_arq = RAIZ / "curadoria" / "revisados.csv"
     rev = pd.read_csv(rev_arq, dtype=str).fillna("") if rev_arq.exists() else pd.DataFrame(columns=["codigo", "decisao"])
     decisao = dict(zip(rev.codigo, rev.decisao.str.lower()))
@@ -156,19 +172,23 @@ def main(mes: str, so_bioma: bool) -> None:
             d["rev"] = decisao.get(d["c"], "")
     sol_app = [d for d in sol if d["rev"] != "reprovado"]
     tec_app = [d for d in tec if d["rev"] != "reprovado"]
+    sol_prod = [d for d in sol if d["rev"] == "aprovado"]
+    tec_prod = [d for d in tec if d["rev"] == "aprovado"]
 
-    usados = {p for lst in (sol, tec, cie, prj) for d in lst for p in d["p"]}
-    produtos = [{"id": r.produto_id, "nome": r.produto, "cat": r.categoria_ampla,
-                 "n": sum(r.produto_id in d["p"] for d in sol_app + tec_app)}
+    def lista_produtos(docs: list) -> list:
+        usados = {p for d in docs for p in d["p"]}
+        return [{"id": r.produto_id, "nome": r.produto, "cat": r.categoria_ampla,
+                 "n": sum(r.produto_id in d["p"] for d in docs)}
                 for r in tax.itertuples() if r.produto_id in usados]
     meta = {"gerado_em": date.today().isoformat(), "redape": mes, "observatorio": release,
             "criterio": "bioma Amazônia" if so_bioma else "bioma Amazônia ou estado da Amazônia Legal"}
 
     SAIDA.mkdir(exist_ok=True)
     grava = lambda nome, obj: (SAIDA / nome).write_text(json.dumps(obj, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    grava("pacote.json", {**meta, "produtos": produtos, "solucoes": sol_app, "tecnicas": tec_app,
+    grava("pacote.json", {**meta, "produtos": lista_produtos(sol_app + tec_app + cie + prj), "solucoes": sol_app, "tecnicas": tec_app,
                           "cientificas": cie, "projetos": prj})
-    grava("pacote-produtor.json", {**meta, "produtos": produtos, "solucoes": sol_app, "tecnicas": tec_app})
+    grava("pacote-produtor.json", {**meta, "produtos": lista_produtos(sol_prod + tec_prod),
+                                   "solucoes": sol_prod, "tecnicas": tec_prod})
 
     c = pd.DataFrame(contagem, columns=["tipo", "camada", "amazonia", "repositorio"])
     rel = (c.groupby(["tipo", "camada"])
@@ -179,11 +199,13 @@ def main(mes: str, so_bioma: bool) -> None:
     rel["origem"] = rel.tipo.map(lambda t: cam.loc[t, "origem"] if t in cam.index else "sem regra")
     rel.sort_values("amazonia", ascending=False).to_csv(SAIDA / "tipos_publicacao.csv", index=False)
 
-    pend = [{"codigo": d["c"], "tipo_doc": "solução" if d["c"].startswith("TEC") else "publicação técnica",
+    pend = [{"prioridade": prioridade(d)[0], "motivo": prioridade(d)[1],
+             "codigo": d["c"], "tipo_doc": "solução" if d["c"].startswith("TEC") else "publicação técnica",
              "titulo": d["t"], "ano": d["a"], "produtos": ";".join(d["p"]), "ufs": ";".join(d["uf"]), "link": d["l"],
              "decisao": "", "revisor": "", "data": "", "observacao": ""}
             for d in sol + tec if not d["rev"]]
-    pd.DataFrame(pend, columns=["codigo", "tipo_doc", "titulo", "ano", "produtos", "ufs", "link",
+    pend.sort(key=lambda x: (x["prioridade"], -int(x["ano"]) if x["ano"].isdigit() else 0))
+    pd.DataFrame(pend, columns=["prioridade", "motivo", "codigo", "tipo_doc", "titulo", "ano", "produtos", "ufs", "link",
                                 "decisao", "revisor", "data", "observacao"]).to_csv(SAIDA / "pendentes.csv", index=False)
 
     revisar = rel[rel.origem != "tabela"]
@@ -194,7 +216,10 @@ def main(mes: str, so_bioma: bool) -> None:
            f"| Publicações técnicas | {len(tec_app)} |",
            f"| Publicações científicas | {len(cie)} |",
            f"| Projetos | {len(prj)} |",
-           f"| Aguardando curadoria (soluções e técnicas) | {len(pend)} |", ""]
+           f"| Liberados para o produtor (aprovados) | {len(sol_prod) + len(tec_prod)} |",
+           f"| Aguardando curadoria (soluções e técnicas) | {len(pend)} |", "",
+           "Fila de curadoria por prioridade: " + ", ".join(
+               f"{n} = {PRIORIDADES[n]} ({sum(x['prioridade'] == n for x in pend)})" for n in sorted(PRIORIDADES)) + ".", ""]
     if len(revisar):
         txt += ["## Tipos de publicação para classificar em config/tipos_publicacao.csv", "",
                 "| Tipo | Camada usada | Origem | Na Amazônia |", "|---|---|---|---|"]

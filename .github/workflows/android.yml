@@ -1,0 +1,48 @@
+name: Gerar app Android
+
+# Gera o APK de teste do app (a mesma página de app/, empacotada com Capacitor) e deixa na release
+# "android-teste" para baixar e instalar no celular. Não publica nada na Google Play.
+on:
+  push:
+    branches: [main]
+    paths: ["app/**", "android/**", "package.json", "package-lock.json", "capacitor.config.json", ".github/workflows/android.yml"]
+  pull_request:
+    paths: ["app/**", "android/**", "package.json", "package-lock.json", "capacitor.config.json", ".github/workflows/android.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write   # atualizar a release android-teste
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21, cache: gradle }
+      - run: npm ci
+      - name: Montar a página e copiar para o projeto Android
+        run: npm run android
+      - name: Compilar o APK de teste
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+      - run: cp android/app/build/outputs/apk/debug/app-debug.apk tecamazonia-teste.apk
+      - uses: actions/upload-artifact@v4
+        with: { name: tecamazonia-apk, path: tecamazonia-teste.apk }
+      - name: Deixar o APK na release android-teste
+        if: github.ref == 'refs/heads/main'
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          gh release view android-teste >/dev/null 2>&1 || gh release create android-teste --prerelease \
+            --title "App Android para teste" \
+            --notes "APK de teste do TecAmazônia, gerado a cada mudança no app. Baixe pelo celular e instale (o Android vai pedir para permitir apps desta fonte). Não é a versão da loja."
+          gh release upload android-teste tecamazonia-teste.apk --clobber
