@@ -1,0 +1,56 @@
+name: Atualizar recorte da Amazônia
+
+# Todo mês, depois que o Redape publica a exportação nova e o Observatório publica a marcação de produtos,
+# estados e biomas: recorta a Amazônia, separa publicações técnicas e científicas e guarda o pacote do app
+# e a fila de curadoria como anexos da release "pacote-AAAA-MM".
+on:
+  schedule:
+    - cron: "0 12 16 * *"   # dia 16 de cada mês, 9h de Brasília
+  workflow_dispatch:
+    inputs:
+      mes:
+        description: "Exportação do Redape AAAA-MM (vazio = mais recente)"
+        required: false
+        default: ""
+      so_bioma:
+        description: "Só bioma Amazônia (sem os estados da Amazônia Legal)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write   # criar a release com o pacote
+
+concurrency:
+  group: atualizar
+  cancel-in-progress: false
+
+jobs:
+  recorte:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip, cache-dependency-path: pipeline/requirements.txt }
+      - run: pip install -r pipeline/requirements.txt
+      - name: Baixar exportação do Redape
+        id: redape
+        run: |
+          python pipeline/redape.py ${{ inputs.mes }} | tee saida.txt
+          echo "mes=$(tail -n 1 saida.txt)" >> "$GITHUB_OUTPUT"
+      - name: Baixar marcação do Observatório
+        env: { GITHUB_TOKEN: "${{ github.token }}" }
+        run: python pipeline/observatorio.py
+      - name: Recortar a Amazônia
+        run: |
+          python pipeline/recorte.py ${{ steps.redape.outputs.mes }} ${{ inputs.so_bioma && '--so-bioma' || '' }}
+          cat saida/resumo.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Publicar pacote na release
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          TAG="pacote-${{ steps.redape.outputs.mes }}"
+          gzip -kf saida/pacote.json saida/pacote-produtor.json
+          gh release view "$TAG" >/dev/null 2>&1 || \
+            gh release create "$TAG" --title "Pacote TecAmazônia ${{ steps.redape.outputs.mes }}" --notes-file saida/resumo.md
+          gh release upload "$TAG" saida/pacote.json.gz saida/pacote-produtor.json.gz \
+            saida/tipos_publicacao.csv saida/pendentes.csv saida/resumo.md --clobber
