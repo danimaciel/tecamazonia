@@ -36,8 +36,11 @@ jobs:
       - name: Baixar exportação do Redape
         id: redape
         run: |
+          set -o pipefail
           python pipeline/redape.py ${{ inputs.mes }} | tee saida.txt
-          echo "mes=$(tail -n 1 saida.txt)" >> "$GITHUB_OUTPUT"
+          MES=$(tail -n 1 saida.txt)
+          [[ "$MES" =~ ^[0-9]{4}-[0-9]{2}$ ]] || { echo "Mês inválido: $MES"; exit 1; }
+          echo "mes=$MES" >> "$GITHUB_OUTPUT"
       - name: Baixar marcação do Observatório
         env: { GITHUB_TOKEN: "${{ github.token }}" }
         run: python pipeline/observatorio.py
