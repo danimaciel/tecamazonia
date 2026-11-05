@@ -1,0 +1,3 @@
+# Planilha Google da curadoria (o recorte lê as abas Soluções e Publicações técnicas).
+# Ela precisa estar compartilhada como "qualquer pessoa com o link pode ver".
+https://docs.google.com/spreadsheets/d/1wD720k8JPvDoURsa0OAzwklVXNEFoTASwdpHZifZGIM/edit
