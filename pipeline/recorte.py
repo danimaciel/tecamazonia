@@ -31,6 +31,7 @@ import re
 import sys
 import unicodedata
 from datetime import date
+from urllib.parse import quote
 from pathlib import Path
 
 import pandas as pd
@@ -98,6 +99,35 @@ def prioridade(d: dict) -> tuple:
     if set(d["uf"]) & UFS_NUCLEO:
         return 2, PRIORIDADES[2]
     return 3, PRIORIDADES[3]
+
+
+def ler_planilha() -> pd.DataFrame:
+    """Decisões da planilha Google de curadoria (config/curadoria.txt), abas Soluções e Publicações técnicas.
+
+    A planilha precisa estar compartilhada como "qualquer pessoa com o link pode ver". Sem planilha ou sem
+    acesso, valem só as decisões de curadoria/revisados.csv."""
+    arq = RAIZ / "config" / "curadoria.txt"
+    m = re.search(r"/spreadsheets/d/([\w-]+)", arq.read_text(encoding="utf-8")) if arq.exists() else None
+    vazio = pd.DataFrame(columns=["codigo", "decisao", "apoio"])
+    if not m:
+        return vazio
+    partes = []
+    for aba in ("Soluções", "Publicações técnicas"):
+        url = f"https://docs.google.com/spreadsheets/d/{m.group(1)}/gviz/tq?tqx=out:csv&sheet={quote(aba)}"
+        try:
+            t = pd.read_csv(url, dtype=str).fillna("")
+        except Exception as ex:
+            print(f"Planilha de curadoria, aba {aba}: não consegui ler ({ex}).")
+            continue
+        t.columns = [sem_acento(c).strip().lower().replace(" ", "_") for c in t.columns]
+        if "codigo" not in t or "decisao" not in t:
+            continue
+        t["apoio"] = t.get("apoio_confirmado", "")
+        t = t[t.decisao.str.strip() != ""]
+        t["decisao"] = t.decisao.map(lambda x: "aprovado" if sem_acento(x.lower()).startswith("aprov") else
+                                     "reprovado" if sem_acento(x.lower()).startswith("reprov") else "")
+        partes.append(t[t.decisao != ""][["codigo", "decisao", "apoio"]])
+    return pd.concat(partes, ignore_index=True) if partes else vazio
 
 
 def apoio_contagem(sol: list) -> dict:
@@ -180,6 +210,7 @@ def main(mes: str, so_bioma: bool) -> None:
     # Curadoria: reprovados saem de tudo; o produtor só recebe o que foi aprovado
     rev_arq = RAIZ / "curadoria" / "revisados.csv"
     rev = pd.read_csv(rev_arq, dtype=str).fillna("") if rev_arq.exists() else pd.DataFrame(columns=["codigo", "decisao"])
+    rev = pd.concat([rev, ler_planilha()], ignore_index=True).drop_duplicates("codigo", keep="last")  # a planilha vale mais
     decisao = dict(zip(rev.codigo, rev.decisao.str.lower()))
     apoio_rev = dict(zip(rev.codigo, rev["apoio"])) if "apoio" in rev else {}
     por_codigo = {d["c"]: d for d in tec}
@@ -224,16 +255,17 @@ def main(mes: str, so_bioma: bool) -> None:
     rel["origem"] = rel.tipo.map(lambda t: cam.loc[t, "origem"] if t in cam.index else "sem regra")
     rel.sort_values("amazonia", ascending=False).to_csv(SAIDA / "tipos_publicacao.csv", index=False)
 
+    nome_prod = dict(zip(tax.produto_id, tax.produto))
     pend = [{"prioridade": prioridade(d)[0], "motivo": prioridade(d)[1],
              "codigo": d["c"], "tipo_doc": "solução" if d["c"].startswith("TEC") else "publicação técnica",
-             "titulo": d["t"], "ano": d["a"],
+             "titulo": d["t"], "ano": d["a"], "unidade": d.get("u", ""), "tipo": d.get("tipo", ""),
              "apoio": ";".join(a["c"] or a["pdf"] for a in d.get("apoio", [])),
              "apoio_titulos": " | ".join(f"{a['t'] or a['pdf']} ({a['origem']}{', ' + confianca(a['nota']) if a['origem'] == 'sugerido' else ''})"
-                                         for a in d.get("apoio", [])), "produtos": ";".join(d["p"]), "ufs": ";".join(d["uf"]), "link": d["l"],
+                                         for a in d.get("apoio", [])), "produtos": "; ".join(nome_prod.get(x, x) for x in d["p"]), "ufs": ";".join(d["uf"]), "link": d["l"],
              "decisao": "", "revisor": "", "data": "", "observacao": ""}
             for d in sol + tec if not d["rev"]]
     pend.sort(key=lambda x: (x["prioridade"], -int(x["ano"]) if x["ano"].isdigit() else 0))
-    pd.DataFrame(pend, columns=["prioridade", "motivo", "codigo", "tipo_doc", "titulo", "ano", "apoio", "apoio_titulos", "produtos", "ufs", "link",
+    pd.DataFrame(pend, columns=["prioridade", "motivo", "codigo", "tipo_doc", "titulo", "ano", "unidade", "tipo", "apoio", "apoio_titulos", "produtos", "ufs", "link",
                                 "decisao", "revisor", "data", "observacao"]).to_csv(SAIDA / "pendentes.csv", index=False)
 
     revisar = rel[rel.origem != "tabela"]
