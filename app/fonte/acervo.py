@@ -87,6 +87,8 @@ def main() -> None:
             if d.get("l"):
                 base = DOMINIO + PREFIXO[k] + d["c"].split(" ")[1] + "/"
                 it["l"] = d["l"][len(base):] if d["l"].startswith(base) else d["l"]
+            if d.get("apoio"):  # material de apoio da solução: título, PDF e origem (d declarado, s sugerido, c curadoria)
+                it["ap"] = [{"t": a.get("t", ""), "pdf": a.get("pdf", ""), "o": a.get("origem", "")[:1]} for a in d["apoio"]]
             if "Amazônia" in d.get("b", []):
                 it["am"] = 1
             itens.append(it)
