@@ -122,7 +122,10 @@ def ler_planilha() -> pd.DataFrame:
         t.columns = [sem_acento(c).strip().lower().replace(" ", "_") for c in t.columns]
         if "codigo" not in t or "decisao" not in t:
             continue
-        t["apoio"] = t.get("apoio_confirmado", "")
+        # Aprovar sem confirmar o apoio aceita o apoio sugerido que a pessoa viu na planilha
+        conf = t["apoio_confirmado"] if "apoio_confirmado" in t else pd.Series("", index=t.index)
+        sug = t["apoio_sugerido"] if "apoio_sugerido" in t else pd.Series("", index=t.index)
+        t["apoio"] = conf.where(conf.str.strip() != "", sug)
         t = t[t.decisao.str.strip() != ""]
         t["decisao"] = t.decisao.map(lambda x: "aprovado" if sem_acento(x.lower()).startswith("aprov") else
                                      "reprovado" if sem_acento(x.lower()).startswith("reprov") else "")
