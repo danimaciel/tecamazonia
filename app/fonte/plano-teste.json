@@ -1,0 +1,19 @@
+{
+  "id": "teste",
+  "t": "Plano de teste (manejo do açaí)",
+  "prod": "Açaí",
+  "nec": "aumentar",
+  "tec": ["TEC 10140"],
+  "pub": "https://www.infoteca.cnptia.embrapa.br/infoteca/bitstream/doc/964364/1/CPAFAP2012Guiapraticodemanejoacaizais.pdf",
+  "pubt": "Guia prático de manejo de açaizais para produção de frutos",
+  "audio": "https://www.infoteca.cnptia.embrapa.br/infoteca/bitstream/doc/1073302/1/04PGMNORTE24.mp3",
+  "video": "",
+  "r": "Este plano serve só para testar as telas. Os passos verdadeiros vão sair do guia da Embrapa e passar pela equipe antes de chegar ao produtor.",
+  "rev": "teste",
+  "etapas": [
+    {"t": "Preparação da área", "f": "Texto de exemplo. A equipe vai escrever este passo a partir do guia.", "q": "", "fonte": ""},
+    {"t": "Práticas de manejo", "f": "Texto de exemplo. A equipe vai escrever este passo a partir do guia.", "q": "", "fonte": ""},
+    {"t": "Adubação e nutrição", "f": "Texto de exemplo. A equipe vai escrever este passo a partir do guia.", "q": "", "fonte": ""},
+    {"t": "Colheita e pós-colheita", "f": "Texto de exemplo. A equipe vai escrever este passo a partir do guia.", "q": "", "fonte": ""}
+  ]
+}

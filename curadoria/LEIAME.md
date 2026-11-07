@@ -22,3 +22,23 @@ Nada chega ao produtor sem passar por alguém da equipe.
    - reprovados saem dos dois.
 
 `revisados.csv` é a memória da curadoria: uma linha por documento, pelo código do Redape (`TEC 123`, `PUB 456`).
+
+## Planos de adoção e parceiros
+
+A jornada de adoção do app (necessidade → soluções no território → plano → acompanhamento) usa mais três listas,
+com a mesma regra: **o produtor só vê o que foi aprovado**; o extensionista vê também o que está em revisão.
+
+- `planos.csv`: um plano por linha (tecnologias ligadas, publicação de base, áudio, vídeo). A `necessidade` é
+  uma de `aumentar`, `pragas`, `recuperar`, `diversificar`, `comercializar`. Plano sem etapas não aparece.
+- `etapas.csv`: os passos de cada plano (`ordem`, `titulo`, `o_que_fazer`, `quando`, `fonte` com a página da
+  publicação de onde saiu o passo). Os passos seguem a decisão do plano: aprovar o plano aprova as etapas dele.
+- `parceiros.csv`: ATER, cooperativas, capacitações e unidades da Embrapa por estado e município.
+
+Para levar as três listas para a planilha Google: `python curadoria/montar_jornada.py jornada.xlsx` e, na
+planilha, Arquivo → Importar → "Inserir nova(s) página(s)". Depois disso o app lê as abas Planos, Etapas e
+Parceiros da planilha, que valem mais que os arquivos daqui. O menu TecAmazônia → Aprovar linhas selecionadas
+também funciona nelas.
+
+Para testar as telas antes de ter plano aprovado, abra o app com `#teste` no fim do endereço, ou toque em
+"Experimentar com o plano de teste" em Meu plano. O plano de teste (`app/fonte/plano-teste.json`) tem só texto de
+exemplo e vem marcado como teste.
