@@ -5,9 +5,9 @@ name: Gerar app Android
 on:
   push:
     branches: [main]
-    paths: ["app/**", "android/**", "package.json", "package-lock.json", "capacitor.config.json", ".github/workflows/android.yml"]
+    paths: ["app/**", "curadoria/planos.csv", "curadoria/etapas.csv", "curadoria/parceiros.csv", "android/**", "package.json", "package-lock.json", "capacitor.config.json", ".github/workflows/android.yml"]
   pull_request:
-    paths: ["app/**", "android/**", "package.json", "package-lock.json", "capacitor.config.json", ".github/workflows/android.yml"]
+    paths: ["app/**", "curadoria/planos.csv", "curadoria/etapas.csv", "curadoria/parceiros.csv", "android/**", "package.json", "package-lock.json", "capacitor.config.json", ".github/workflows/android.yml"]
   workflow_dispatch:
 
 permissions:

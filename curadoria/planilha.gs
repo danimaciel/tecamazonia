@@ -6,6 +6,7 @@
  *     repositório) e acrescenta só o que ainda não está na planilha. As decisões já feitas não mudam.
  *   - Aprovar / Reprovar linhas selecionadas: marca a decisão, quem revisou e a data nas linhas
  *     selecionadas. Use com um filtro (por unidade, produto, estado, prioridade) para decidir em lote.
+ *     Funciona também nas abas Planos e Parceiros (a aba Etapas segue a decisão do plano).
  * Para trazer a fila sozinho todo mês: Apps Script → Acionadores → importarPendentes, mensal, dia 17.
  */
 const REPO = 'danimaciel/tecamazonia';
@@ -51,8 +52,11 @@ function importarPendentes() {
 
 function marcar(decisao) {
   const aba = SpreadsheetApp.getActiveSheet();
-  const cols = ABAS[aba.getName()];
-  if (!cols) return SpreadsheetApp.getUi().alert('Use nas abas Soluções ou Publicações técnicas.');
+  // Vale para qualquer aba com as colunas decisao, revisor e data (Soluções, Publicações técnicas, Planos, Parceiros)
+  const cols = aba.getRange(1, 1, 1, aba.getLastColumn()).getValues()[0].map(String);
+  if (!['decisao', 'revisor', 'data'].every(c => cols.includes(c))) {
+    return SpreadsheetApp.getUi().alert('Use numa aba com as colunas decisao, revisor e data (Soluções, Publicações técnicas, Planos ou Parceiros).');
+  }
   const quem = Session.getActiveUser().getEmail() || 'curadoria';
   const hoje = Utilities.formatDate(new Date(), 'America/Sao_Paulo', 'yyyy-MM-dd');
   let n = 0;

@@ -6,7 +6,7 @@ name: Publicar app no GitHub Pages
 on:
   push:
     branches: [main]
-    paths: ["app/**", ".github/workflows/pages.yml"]
+    paths: ["app/**", "curadoria/planos.csv", "curadoria/etapas.csv", "curadoria/parceiros.csv", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:

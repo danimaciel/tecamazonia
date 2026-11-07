@@ -11,6 +11,7 @@ chegar ao app. Não é um serviço oficial da Embrapa.
 | Parte | O que é |
 |---|---|
 | `app/` | O app (uma página, roda sem internet), publicado em https://danimaciel.github.io/tecamazonia/. Dois modos: **produtor** (voz em destaque, só conteúdo revisado: painel de 2022 mais o que a curadoria aprovar) e **extensionista** (busca escrita ou falada no acervo todo da Amazônia, com filtros e envio pelo WhatsApp). `app/fonte/acervo.py` baixa o pacote mensal para `app/dados/acervo.json` |
+| Jornada de adoção | No modo produtor: "Qual é a sua necessidade?", soluções ordenadas pelo território (GPS do celular ou escolha do município), plano de adoção passo a passo, "Meu plano" com etapas, registro de avanço por foto, áudio ou texto, resultados antes e depois e resumo para o técnico pelo WhatsApp. Tudo fica no celular. Planos, etapas e parceiros passam pela curadoria (`curadoria/planos.csv`, `etapas.csv`, `parceiros.csv`) |
 | `pipeline/` | Recorte da Amazônia: Redape (exportação mensal) + marcação do Observatório (produtos, estados, biomas) |
 | `config/tipos_publicacao.csv` | Qual tipo de publicação é material técnico e qual é científico |
 | `curadoria/` | Decisões da equipe sobre o que entra no app |
