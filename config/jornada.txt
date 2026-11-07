@@ -1,0 +1,4 @@
+# Planilha Google da jornada de adoção (abas Planos, Etapas e Parceiros), lida por app/fonte/construir.py.
+# Ela precisa estar compartilhada como "qualquer pessoa com o link pode ver".
+# Sem este arquivo, o app procura as abas na planilha de curadoria (config/curadoria.txt).
+https://docs.google.com/spreadsheets/d/1fqO3EhjPLQg6LI0ksh1FHEWWyNIBalBmbOYyo6RUpuQ/edit
