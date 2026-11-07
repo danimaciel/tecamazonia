@@ -3,7 +3,7 @@
 Tudo vai dentro da página, para ela funcionar aberta direto do celular, sem internet e sem servidor:
   - catálogo de 2022 (app/dados/catalogo-2022.json);
   - planos de adoção, etapas e parceiros (curadoria/planos.csv, etapas.csv, parceiros.csv). Quando a planilha
-    Google da curadoria (config/curadoria.txt) tem as abas Planos, Etapas ou Parceiros, elas valem mais que os
+    Google da jornada (config/jornada.txt, ou a da curadoria em config/curadoria.txt) tem as abas Planos, Etapas ou Parceiros, elas valem mais que os
     arquivos do repositório;
   - municípios da Amazônia Legal com coordenadas (app/dados/municipios.json), para achar o município pelo GPS;
   - um plano de teste (app/fonte/plano-teste.json), que só aparece abrindo a página com #teste.
@@ -27,8 +27,8 @@ COLUNA_DA_ABA = {"Planos": "plano", "Etapas": "ordem", "Parceiros": "o_que_faz"}
 
 def ler_aba(aba: str) -> list[dict] | None:
     """Lê uma aba da planilha de curadoria como CSV; None se não houver planilha, aba ou internet."""
-    cfg = RAIZ / "config" / "curadoria.txt"
-    if not cfg.exists():
+    cfg = next((c for c in (RAIZ / "config" / "jornada.txt", RAIZ / "config" / "curadoria.txt") if c.exists()), None)
+    if not cfg:
         return None
     m = re.search(r"/spreadsheets/d/([\w-]+)", cfg.read_text(encoding="utf-8"))
     if not m:

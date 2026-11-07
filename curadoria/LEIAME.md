@@ -34,9 +34,9 @@ com a mesma regra: **o produtor só vê o que foi aprovado**; o extensionista v�
   publicação de onde saiu o passo). Os passos seguem a decisão do plano: aprovar o plano aprova as etapas dele.
 - `parceiros.csv`: ATER, cooperativas, capacitações e unidades da Embrapa por estado e município.
 
-Para levar as três listas para a planilha Google: `python curadoria/montar_jornada.py jornada.xlsx` e, na
-planilha, Arquivo → Importar → "Inserir nova(s) página(s)". Depois disso o app lê as abas Planos, Etapas e
-Parceiros da planilha, que valem mais que os arquivos daqui. O menu TecAmazônia → Aprovar linhas selecionadas
+As três listas ficam numa planilha Google própria, a da jornada (link em `config/jornada.txt`), gerada com
+`python curadoria/montar_jornada.py jornada.xlsx`. O app lê as abas Planos, Etapas e Parceiros dela, que valem
+mais que os arquivos daqui; sem `config/jornada.txt`, procura as abas na planilha de curadoria. O menu TecAmazônia → Aprovar linhas selecionadas
 também funciona nelas.
 
 Para testar as telas antes de ter plano aprovado, abra o app com `#teste` no fim do endereço, ou toque em
