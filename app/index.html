@@ -130,6 +130,8 @@ body[data-modo="ext"] .netwrap{order:3} body[data-modo="ext"] .note{order:4} bod
 body{padding-bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 body:not([data-vista="inicio"]) .app > :not(header):not(#vista){display:none !important}
 body[data-vista="inicio"] #vista{display:none}
+.parar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom, 0px));z-index:6;background:var(--acai);color:#fff;border:0;border-radius:999px;padding:14px 24px;font:inherit;font-size:17px;font-weight:700;box-shadow:0 6px 20px rgba(0,0,0,.25);min-height:52px}
+.parar[hidden]{display:none}
 .nav{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;padding:6px max(8px, env(safe-area-inset-left, 0px)) calc(6px + env(safe-area-inset-bottom, 0px))}
 .nav div{display:flex;max-width:560px;width:100%;justify-content:space-around;gap:4px}
 .nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12.5px;font-weight:700;color:var(--muted);text-decoration:none;padding:6px 4px;border-radius:12px;min-height:48px}
@@ -260,6 +262,7 @@ footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);paddin
   <footer class="so-ext">Conteúdo: acervo público da Embrapa (Redape), recortado para a Amazônia pela marcação do Observatório de Pesquisa da Embrapa. Material técnico e científico vêm separados pelo tipo de publicação. O que ainda não passou pela curadoria aparece como "Em revisão" e não chega ao produtor. Não é um serviço oficial da Embrapa.</footer>
 </div>
 
+<button type="button" id="parar" class="parar" hidden>⏹ Parar o áudio</button>
 <nav class="nav" aria-label="Telas do app"><div>
   <a href="#/inicio" data-vista="inicio"><span class="ic" aria-hidden="true">🏠</span>Início</a>
   <a href="#/meu" data-vista="meu"><span class="ic" aria-hidden="true">📋</span>Meu plano</a>
@@ -447,12 +450,24 @@ function pickVoice(){ try { const vs = speechSynthesis.getVoices(); voz = vs.fin
 if ('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
 const FalaNativa = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()
   && window.Capacitor.Plugins && window.Capacitor.Plugins.TextToSpeech;
+// Botão "Parar" que aparece por cima de tudo enquanto o app fala
+let falaVez = 0;
+function falando(sim, vez){ if (!sim && vez !== falaVez) return; $('#parar').hidden = !sim; }
+function calar(){
+  falaVez++; falando(false, falaVez);
+  if (FalaNativa){ FalaNativa.stop().catch(()=>{}); return; }
+  try { speechSynthesis.cancel(); } catch(e){}
+}
 function speak(t, force){
   if (!force && !userTalked) return;
-  if (FalaNativa){ FalaNativa.stop().catch(()=>{}).then(() => FalaNativa.speak({ text: t, lang: 'pt-BR', rate: 0.95 })).catch(()=>{}); return; }
-  if (!('speechSynthesis' in window)) return;
-  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang='pt-BR'; if (voz) u.voice = voz; u.rate = 0.95; speechSynthesis.speak(u); } catch(e){}
+  const vez = ++falaVez; falando(true, vez);
+  if (FalaNativa){ FalaNativa.stop().catch(()=>{}).then(() => FalaNativa.speak({ text: t, lang: 'pt-BR', rate: 0.95 })).catch(()=>{}).then(() => falando(false, vez)); return; }
+  if (!('speechSynthesis' in window)) return falando(false, vez);
+  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang='pt-BR'; if (voz) u.voice = voz; u.rate = 0.95;
+    u.onend = u.onerror = () => falando(false, vez); speechSynthesis.speak(u); } catch(e){ falando(false, vez); }
 }
+$('#parar').addEventListener('click', calar);
+window.addEventListener('hashchange', calar);
 
 // Microfone: no app, reconhecimento do próprio celular (plugin do Capacitor, funciona sem internet quando o
 // pacote de português está instalado no aparelho); no navegador, o reconhecimento do Chrome.
@@ -859,9 +874,24 @@ function maisPerto(lat, lon){
   }
   return {...melhor, km: dmin};
 }
+// Estado da unidade da Embrapa que desenvolveu a solução (o painel de 2022 não traz estado nem microrregião)
+const UNIDADE_UF = {'Embrapa Acre': 'AC', 'Embrapa Amapá': 'AP', 'Embrapa Amazônia Ocidental': 'AM', 'Embrapa Amazônia Oriental': 'PA',
+  'Embrapa Rondônia': 'RO', 'Embrapa Roraima': 'RR', 'Embrapa Pesca e Aquicultura': 'TO', 'Embrapa Agrossilvipastoril': 'MT', 'Embrapa Cocais': 'MA'};
+const citaUF = (r, uf) => (r.uf || []).includes(uf) || (r.ac && uf === 'AC');
+const daUnidadeUF = (r, uf) => UNIDADE_UF[(r.u || '').trim()] === uf;
+function solucoesDoEstado(uf){
+  const sai = [];
+  for (const r of DATA){
+    if (r.ac && uf !== 'AC') continue;
+    const s = (citaUF(r, uf) ? 2 : 0) + (daUnidadeUF(r, uf) ? 1 : 0) + (planoDe(r) ? 1 : 0);
+    if (s) sai.push({r, s, why: citaUF(r, uf) ? ['testada no seu estado'] : ['desenvolvida pela Embrapa no seu estado']});
+  }
+  return sai.sort((a, b) => b.s - a.s);
+}
 function telaTerritorio(){
   const uf = lugar && lugar.uf;
-  const nSol = uf ? DATA.filter(r => (r.uf || []).includes(uf)).length : 0;
+  const sols = uf ? solucoesDoEstado(uf) : [];
+  const nSol = sols.length;
   const nPar = uf ? parceiros().filter(p => p.uf === uf).length : 0;
   const ufs = Object.keys(NOME_UF).sort((a, b) => NOME_UF[a].localeCompare(NOME_UF[b], 'pt'));
   return `<h2 class="vh">Seu território</h2>
@@ -875,8 +905,10 @@ function telaTerritorio(){
       </div>
     </div>
     ${uf ? `<div class="painel"><h3>No seu estado</h3>
-      <p>${nSol ? `${nSol} solução${nSol > 1 ? 'ões' : ''} aprovada${nSol > 1 ? 's' : ''} pela equipe cita${nSol > 1 ? 'm' : ''} ${esc(NOME_UF[uf])}. Elas aparecem primeiro quando você escolhe uma necessidade.` : 'As soluções que citam o seu estado aparecem primeiro quando você escolhe uma necessidade.'}</p>
-      <p>${nPar ? `<a href="#/parceiros">${nPar} parceiro${nPar > 1 ? 's' : ''} na região</a>` : 'A lista de parceiros do seu estado ainda está sendo montada.'}</p></div>` : ''}`;
+      <p>${nSol ? `${nSol > 1 ? nSol + ' soluções ligadas' : 'Uma solução ligada'} ao seu estado, porque ${nSol > 1 ? 'foram testadas' : 'foi testada'} aqui ou ${nSol > 1 ? 'desenvolvidas' : 'desenvolvida'} pela Embrapa no estado. Elas também aparecem primeiro quando você escolhe uma necessidade.` : `Ainda não temos solução aprovada ligada a ${esc(NOME_UF[uf])}. As soluções gerais da Amazônia continuam aparecendo nas necessidades.`}</p>
+      <p>${nPar ? `<a href="#/parceiros">${nPar} parceiro${nPar > 1 ? 's' : ''} na região</a>` : 'A lista de parceiros do seu estado ainda está sendo montada.'}</p></div>
+    ${sols.slice(0, 8).map(x => cardJornada(x, false)).join('')}
+    ${nSol > 8 ? `<details><summary>Ver mais ${nSol - 8} soluções</summary><div style="display:flex;flex-direction:column;gap:12px;margin-top:12px">${sols.slice(8).map(x => cardJornada(x, false)).join('')}</div></details>` : ''}` : ''}`;
 }
 function opcoesMun(uf, sel){
   if (!uf) return '<option value="">escolha o estado antes</option>';
@@ -915,8 +947,8 @@ function telaNecessidade(k){
     if (!n.re.test(tx)) continue;
     if (r.ac && uf && uf !== 'AC') continue;
     let s = n.re.test(r._t) ? 4 : 2;
-    if (uf && (r.uf || []).includes(uf)) s += 3;
-    if (r.ac && uf === 'AC') s += 3;
+    if (uf && citaUF(r, uf)) s += 3;
+    else if (uf && daUnidadeUF(r, uf)) s += 1;
     if (planoDe(r)) s += 5;
     sol.push({r, s, why: []});
   }
