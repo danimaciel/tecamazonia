@@ -859,9 +859,24 @@ function maisPerto(lat, lon){
   }
   return {...melhor, km: dmin};
 }
+// Estado da unidade da Embrapa que desenvolveu a solução (o painel de 2022 não traz estado nem microrregião)
+const UNIDADE_UF = {'Embrapa Acre': 'AC', 'Embrapa Amapá': 'AP', 'Embrapa Amazônia Ocidental': 'AM', 'Embrapa Amazônia Oriental': 'PA',
+  'Embrapa Rondônia': 'RO', 'Embrapa Roraima': 'RR', 'Embrapa Pesca e Aquicultura': 'TO', 'Embrapa Agrossilvipastoril': 'MT', 'Embrapa Cocais': 'MA'};
+const citaUF = (r, uf) => (r.uf || []).includes(uf) || (r.ac && uf === 'AC');
+const daUnidadeUF = (r, uf) => UNIDADE_UF[(r.u || '').trim()] === uf;
+function solucoesDoEstado(uf){
+  const sai = [];
+  for (const r of DATA){
+    if (r.ac && uf !== 'AC') continue;
+    const s = (citaUF(r, uf) ? 2 : 0) + (daUnidadeUF(r, uf) ? 1 : 0) + (planoDe(r) ? 1 : 0);
+    if (s) sai.push({r, s, why: citaUF(r, uf) ? ['testada no seu estado'] : ['desenvolvida pela Embrapa no seu estado']});
+  }
+  return sai.sort((a, b) => b.s - a.s);
+}
 function telaTerritorio(){
   const uf = lugar && lugar.uf;
-  const nSol = uf ? DATA.filter(r => (r.uf || []).includes(uf)).length : 0;
+  const sols = uf ? solucoesDoEstado(uf) : [];
+  const nSol = sols.length;
   const nPar = uf ? parceiros().filter(p => p.uf === uf).length : 0;
   const ufs = Object.keys(NOME_UF).sort((a, b) => NOME_UF[a].localeCompare(NOME_UF[b], 'pt'));
   return `<h2 class="vh">Seu território</h2>
@@ -875,8 +890,10 @@ function telaTerritorio(){
       </div>
     </div>
     ${uf ? `<div class="painel"><h3>No seu estado</h3>
-      <p>${nSol ? `${nSol} solução${nSol > 1 ? 'ões' : ''} aprovada${nSol > 1 ? 's' : ''} pela equipe cita${nSol > 1 ? 'm' : ''} ${esc(NOME_UF[uf])}. Elas aparecem primeiro quando você escolhe uma necessidade.` : 'As soluções que citam o seu estado aparecem primeiro quando você escolhe uma necessidade.'}</p>
-      <p>${nPar ? `<a href="#/parceiros">${nPar} parceiro${nPar > 1 ? 's' : ''} na região</a>` : 'A lista de parceiros do seu estado ainda está sendo montada.'}</p></div>` : ''}`;
+      <p>${nSol ? `${nSol > 1 ? nSol + ' soluções ligadas' : 'Uma solução ligada'} ao seu estado, porque ${nSol > 1 ? 'foram testadas' : 'foi testada'} aqui ou ${nSol > 1 ? 'desenvolvidas' : 'desenvolvida'} pela Embrapa no estado. Elas também aparecem primeiro quando você escolhe uma necessidade.` : `Ainda não temos solução aprovada ligada a ${esc(NOME_UF[uf])}. As soluções gerais da Amazônia continuam aparecendo nas necessidades.`}</p>
+      <p>${nPar ? `<a href="#/parceiros">${nPar} parceiro${nPar > 1 ? 's' : ''} na região</a>` : 'A lista de parceiros do seu estado ainda está sendo montada.'}</p></div>
+    ${sols.slice(0, 8).map(x => cardJornada(x, false)).join('')}
+    ${nSol > 8 ? `<details><summary>Ver mais ${nSol - 8} soluções</summary><div style="display:flex;flex-direction:column;gap:12px;margin-top:12px">${sols.slice(8).map(x => cardJornada(x, false)).join('')}</div></details>` : ''}` : ''}`;
 }
 function opcoesMun(uf, sel){
   if (!uf) return '<option value="">escolha o estado antes</option>';
@@ -915,8 +932,8 @@ function telaNecessidade(k){
     if (!n.re.test(tx)) continue;
     if (r.ac && uf && uf !== 'AC') continue;
     let s = n.re.test(r._t) ? 4 : 2;
-    if (uf && (r.uf || []).includes(uf)) s += 3;
-    if (r.ac && uf === 'AC') s += 3;
+    if (uf && citaUF(r, uf)) s += 3;
+    else if (uf && daUnidadeUF(r, uf)) s += 1;
     if (planoDe(r)) s += 5;
     sol.push({r, s, why: []});
   }
