@@ -1,3 +1,4 @@
 # Planilha Google da curadoria (o recorte lê as abas Soluções e Publicações técnicas).
+# É a mesma planilha da jornada (abas Planos, Etapas e Parceiros), na conta pessoal da Daniela.
 # Ela precisa estar compartilhada como "qualquer pessoa com o link pode ver".
-https://docs.google.com/spreadsheets/d/1wD720k8JPvDoURsa0OAzwklVXNEFoTASwdpHZifZGIM/edit
+https://docs.google.com/spreadsheets/d/11q1HZTDcMypVZfgyL73Yh_VYeoy_EEC5sBE7BXezTCU/edit
